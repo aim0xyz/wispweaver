@@ -616,6 +616,13 @@
   #speedBtn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
   /* keep wave/lumina clear of the top-right control buttons */
   #hud .right-stats { padding-right: 92px; }
+  #buildTag {
+    position: absolute; bottom: 6px; left: 8px;
+    font-size: 9px; letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.18);
+    font-family: 'Space Grotesk', sans-serif;
+    z-index: 31; pointer-events: none;
+  }
   #toast {
     position: absolute; bottom: 26px; left: 50%;
     transform: translateX(-50%) translateY(16px);
@@ -654,6 +661,9 @@
 
   <!-- Toast -->
   <div id="toast"></div>
+
+  <!-- Build/diagnostic tag -->
+  <div id="buildTag"></div>
 
   <!-- HUD -->
   <div id="hud" style="display:none;">
@@ -817,6 +827,19 @@
 // ═══════════════════════════════════════════════════════════════
 // WISPWEAVER — Echoes of Light
 // ═══════════════════════════════════════════════════════════════
+const BUILD = 'v8 · 18 Jun';
+
+// Global crash catcher — if ANYTHING throws at load, show it on screen
+// (so a blank menu / missing wisps is never silent again).
+window.addEventListener('error', function (ev) {
+  try {
+    var t = document.getElementById('buildTag');
+    if (t) {
+      t.textContent = 'ERR: ' + (ev.message || (ev.error && ev.error.message) || 'unknown');
+      t.style.color = '#ff5566';
+    }
+  } catch (e) {}
+});
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -1500,10 +1523,17 @@ class Particle {
 // ─── GAME FUNCTIONS ───
 
 function startSelect() {
-  document.getElementById('menu-screen').classList.add('hidden');
-  document.getElementById('select-screen').classList.remove('hidden');
-  game.state = 'select';
-  renderCharSelect();
+  try {
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('select-screen').classList.remove('hidden');
+    game.state = 'select';
+    renderCharSelect();
+  } catch (err) {
+    console.error('startSelect failed:', err);
+    toast('Wisp list failed: ' + err.message);
+    const t = document.getElementById('buildTag');
+    if (t) { t.textContent = 'ERR: ' + err.message; t.style.color = '#ff5566'; }
+  }
 }
 
 function renderCharSelect() {
@@ -3064,6 +3094,8 @@ try {
   updateMuteIcon();
   updateSpeedBtn();
   updateMenuBest();
+  const bt = document.getElementById('buildTag');
+  if (bt && !bt.textContent) bt.textContent = BUILD;
 } catch (err) { console.error('init warning:', err); }
 
 console.log('Wispweaver loaded — weave light, push back the dark.');
