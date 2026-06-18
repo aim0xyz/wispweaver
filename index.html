@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Wispweaver — Echoes of Light</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
@@ -827,17 +830,26 @@
 // ═══════════════════════════════════════════════════════════════
 // WISPWEAVER — Echoes of Light
 // ═══════════════════════════════════════════════════════════════
-const BUILD = 'v8 · 18 Jun';
+const BUILD = 'v9 · 18 Jun';
 
-// Global crash catcher — if ANYTHING throws at load, show it on screen
-// (so a blank menu / missing wisps is never silent again).
+// Crash catcher for OUR code only. Editor live-preview tools inject a
+// cross-origin auto-reload script; when that errors the browser reports an
+// opaque "Script error." with no line info — ignore that noise. Real,
+// same-origin errors are shown with a line number so they can be fixed.
 window.addEventListener('error', function (ev) {
   try {
+    if (!ev) return;
+    var opaque = (ev.message === 'Script error.' || !ev.message) && !ev.lineno;
+    if (opaque) return;  // third-party / preview-tool noise — not the game
     var t = document.getElementById('buildTag');
-    if (t) {
-      t.textContent = 'ERR: ' + (ev.message || (ev.error && ev.error.message) || 'unknown');
-      t.style.color = '#ff5566';
-    }
+    if (!t) return;
+    var msg = (ev.error && ev.error.message) || ev.message || 'error';
+    if (ev.lineno) msg += ' @' + ev.lineno + ':' + ev.colno;
+    t.textContent = 'ERR ' + msg;
+    t.style.color = '#ff5566';
+    t.style.fontSize = '11px';
+    t.style.maxWidth = '92%';
+    t.style.whiteSpace = 'normal';
   } catch (e) {}
 });
 
