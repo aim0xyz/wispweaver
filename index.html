@@ -617,8 +617,26 @@
     cursor: pointer; z-index: 30; transition: all 0.2s;
   }
   #speedBtn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
+  #autoBtn {
+    position: absolute; top: 12px; right: 104px;
+    height: 34px; padding: 0 11px; border-radius: 9px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 30; transition: all 0.2s;
+  }
+  #autoBtn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
+  #autoBtn.active {
+    background: linear-gradient(135deg, rgba(136,255,204,0.28), rgba(68,221,136,0.28));
+    border-color: rgba(136,255,204,0.6);
+    color: #aaffdd;
+    box-shadow: 0 0 14px rgba(136,255,204,0.35);
+  }
   /* keep wave/lumina clear of the top-right control buttons */
-  #hud .right-stats { padding-right: 92px; }
+  #hud .right-stats { padding-right: 156px; }
   #buildTag {
     position: absolute; bottom: 6px; left: 8px;
     font-size: 9px; letter-spacing: 0.5px;
@@ -659,6 +677,7 @@
   <canvas id="gameCanvas" width="800" height="600"></canvas>
 
   <!-- Speed + Mute controls -->
+  <button id="autoBtn" onclick="toggleAuto()" title="Autopilot — the wisp plays itself (P)" aria-label="Toggle autopilot">AUTO</button>
   <button id="speedBtn" onclick="cycleSpeed()" title="Game speed (0.5x / 1x / 2x)" aria-label="Game speed">1×</button>
   <button id="muteBtn" onclick="toggleMute()" title="Sound on/off" aria-label="Toggle sound"></button>
 
@@ -1264,6 +1283,7 @@ let game = {
   screenFlash: 0,
   hitStop: 0,
   gameSpeed: 1,
+  autoPlay: false,
   touchActive: false,
   moveX: 0, moveY: 0,
   joyOrigin: null, joyKnob: null,
@@ -1451,6 +1471,7 @@ class Enemy {
         this.phaseTimer = 0;
         this.phase = 0;
         this.chargeCooldown = 0;
+        this.chargeAngle = 0;       // direction locked in when the charge telegraphs
         break;
     }
   }
@@ -1775,6 +1796,7 @@ function upgradeScreen() {
     const lvl = (game.upgradeLevels[upg.id] || 0) + 1;
     const card = document.createElement('div');
     card.className = 'upgrade-card';
+    card.dataset.upgId = upg.id;
     const svg = getIconSVG(upg.icon, upg.color || '#ff8800');
     card.innerHTML = `
       <div class="icon-wrap">${svg}</div>
@@ -1795,6 +1817,9 @@ function upgradeScreen() {
     };
     grid.appendChild(card);
   });
+
+  // Autopilot resolves the pick itself after a brief beat so it stays visible.
+  if (game.autoPlay) setTimeout(() => { if (game.state === 'upgrade') autoPickUpgrade(); }, 650);
 }
 
 function nextWave() {
@@ -2024,6 +2049,11 @@ function update() {
     if (game.keys['a'] || game.keys['arrowleft']) dx = -1;
     if (game.keys['d'] || game.keys['arrowright']) dx = 1;
   }
+  // Autopilot — drives the wisp only when the player gives no manual input.
+  if (game.autoPlay && dx === 0 && dy === 0 && !game.touchActive) {
+    const v = computeAutoMove(p, stats);
+    dx = v.x; dy = v.y;
+  }
   let mag = Math.hypot(dx, dy);
   if (mag > 1) { dx /= mag; dy /= mag; mag = 1; }   // cap (normalises diagonals too)
   game.isMoving = mag > 0.05;
@@ -2187,7 +2217,9 @@ function update() {
     const angleToPlayer = Math.atan2(p.y - e.y, p.x - e.x);
     const dToPlayer = dist(e.x, e.y, p.x, p.y);
     
-    if (e.type !== 'spawner' || game.enemies.length < 20) {
+    // A charging boss commits to its locked dash — no homing correction.
+    const bossCharging = e.type === 'boss' && e.chargeFlash > 5;
+    if ((e.type !== 'spawner' || game.enemies.length < 20) && !bossCharging) {
       if (dToPlayer > e.radius + p.radius) {
         e.x += Math.cos(angleToPlayer) * e.speed;
         e.y += Math.sin(angleToPlayer) * e.speed;
@@ -2219,16 +2251,17 @@ function update() {
         e.phaseTimer = 0;
       }
       
-      // Charge attack - telegraph with red flash
+      // Charge attack — telegraph (red flash) then a committed dash in a
+      // FIXED direction so the player can dodge sideways and make it miss.
       if (e.phase === 1 && e.chargeCooldown <= 0) {
-        e.chargeFlash = 30;
+        e.chargeFlash = 45;            // longer telegraph = fair reaction window
+        e.chargeAngle = angleToPlayer; // lock aim at the player's position NOW
         e.chargeCooldown = 120;
       }
-      if (e.chargeFlash > 15 && e.chargeFlash < 25) {
-        // Charge! 
-        const a = angleToPlayer;
-        e.knockbackX += Math.cos(a) * 7;
-        e.knockbackY += Math.sin(a) * 7;
+      if (e.chargeFlash > 5 && e.chargeFlash < 25) {
+        // Dash along the locked-in angle, NOT the player's current position.
+        e.knockbackX += Math.cos(e.chargeAngle) * 8;
+        e.knockbackY += Math.sin(e.chargeAngle) * 8;
         spawnParticles(e.x, e.y, '#ff2244', 10, 3, 15, 2);
       }
     }
@@ -2988,6 +3021,9 @@ document.addEventListener('keydown', e => {
   const key = e.key.toLowerCase();
   game.keys[key] = true;
   
+  // Toggle autopilot with P (but not while typing in a field)
+  if (key === 'p' && document.activeElement?.tagName !== 'INPUT') toggleAuto();
+
   // Menu keyboard shortcuts
   if (e.key === 'Enter') {
     if (game.state === 'menu') startSelect();
@@ -3111,13 +3147,105 @@ function cycleSpeed() {
   Sound.resume(); sfx('hit');
 }
 
+// ─── AUTOPILOT ───
+// Priority for auto-picking upgrades (highest first). Offence > sustain > utility.
+const AUTO_UPGRADE_PRIORITY = [
+  'more_dmg', 'faster_atk', 'extra_shot', 'wider_arc', 'chain', 'explode_kill',
+  'max_hp', 'regen', 'move_speed', 'magnet', 'longer_trail', 'wider_trail'
+];
+
+function updateAutoBtn() {
+  const b = document.getElementById('autoBtn');
+  if (b) b.classList.toggle('active', !!game.autoPlay);
+}
+function toggleAuto() {
+  game.autoPlay = !game.autoPlay;
+  Store.set('ww_auto', game.autoPlay ? '1' : '0');
+  updateAutoBtn();
+  Sound.resume(); sfx('hit');
+  toast(game.autoPlay ? 'Autopilot ON — the wisp weaves itself' : 'Autopilot OFF');
+  // If switched on while a pick is waiting, resolve it now.
+  if (game.autoPlay && game.state === 'upgrade') autoPickUpgrade();
+}
+
+// Steering for the bot: flee danger, grab lumina when safe, hug away from walls.
+function computeAutoMove(p, stats) {
+  let ax = 0, ay = 0;
+
+  // 1. Repel from enemies — stronger the closer they are.
+  for (const e of game.enemies) {
+    const ex = p.x - e.x, ey = p.y - e.y;
+    const d = Math.hypot(ex, ey) || 1;
+    const comfort = e.radius + p.radius + 80;   // keep this much clearance
+    if (d < comfort) {
+      const w = (comfort - d) / comfort;        // 0..1, 1 = touching
+      let mult = w * w * 3.2;
+      if (e.type === 'boss') mult *= 2;
+      // Dodge perpendicular to a charging boss instead of straight back.
+      if (e.type === 'boss' && e.chargeFlash > 5) {
+        const perp = (((p.x * 13 + p.y * 7) | 0) % 2) ? 1 : -1;  // stable side choice
+        ax += -Math.sin(e.chargeAngle) * perp * mult * 1.5;
+        ay += Math.cos(e.chargeAngle) * perp * mult * 1.5;
+      }
+      ax += (ex / d) * mult;
+      ay += (ey / d) * mult;
+    }
+  }
+
+  // 2. When not under pressure, drift toward the nearest lumina orb.
+  if (Math.hypot(ax, ay) < 1.1 && game.luminaOrbs.length) {
+    let best = null, bd = Infinity;
+    for (const o of game.luminaOrbs) {
+      const d = dist(p.x, p.y, o.x, o.y);
+      if (d < bd) { bd = d; best = o; }
+    }
+    if (best) {
+      const d = Math.hypot(best.x - p.x, best.y - p.y) || 1;
+      ax += ((best.x - p.x) / d) * 0.7;
+      ay += ((best.y - p.y) / d) * 0.7;
+    }
+  }
+
+  // 3. Stay off the walls so the bot can't get cornered.
+  const margin = 90;
+  if (p.x < margin)       ax += (margin - p.x) / margin * 1.8;
+  if (p.x > W - margin)   ax -= (p.x - (W - margin)) / margin * 1.8;
+  if (p.y < margin)       ay += (margin - p.y) / margin * 1.8;
+  if (p.y > H - margin)   ay -= (p.y - (H - margin)) / margin * 1.8;
+
+  // 4. Nothing pressing — ease back toward the center to stay mobile.
+  if (Math.abs(ax) < 0.02 && Math.abs(ay) < 0.02) {
+    ax = (W / 2 - p.x) * 0.0015;
+    ay = (H / 2 - p.y) * 0.0015;
+  }
+  return { x: ax, y: ay };
+}
+
+// Auto-choose an upgrade card by priority, then click it.
+function autoPickUpgrade() {
+  const grid = document.getElementById('upgradeGrid');
+  if (!grid) return;
+  const cards = [...grid.querySelectorAll('.upgrade-card')];
+  if (!cards.length) return;
+  let best = cards[0], bestRank = 1e9;
+  for (const card of cards) {
+    const id = card.dataset.upgId;
+    const rank = AUTO_UPGRADE_PRIORITY.indexOf(id);
+    const r = rank === -1 ? 999 : rank;
+    if (r < bestRank) { bestRank = r; best = card; }
+  }
+  best.click();
+}
+
 // Initial setup — guarded so a single failure can never blank the whole game
 try {
   const savedSpeed = parseFloat(Store.get('ww_speed'));
   if (SPEEDS.includes(savedSpeed)) game.gameSpeed = savedSpeed;
+  game.autoPlay = Store.get('ww_auto') === '1';
   resizeCanvas();
   updateMuteIcon();
   updateSpeedBtn();
+  updateAutoBtn();
   updateMenuBest();
   const bt = document.getElementById('buildTag');
   if (bt && !bt.textContent) bt.textContent = BUILD;
