@@ -2317,8 +2317,6 @@ function update() {
     const angleToPlayer = Math.atan2(p.y - e.y, p.x - e.x);
     const dToPlayer = dist(e.x, e.y, p.x, p.y);
     
-    // A charging boss commits to its locked dash — no homing correction.
-    const bossCharging = e.type === 'boss' && e.chargeFlash > 5;
     if (e.type === 'caster') {
       // Kiter: hold a preferred range, strafe, and fire dodgeable bolts.
       if (dToPlayer < e.preferredDist - 30) {
@@ -2342,7 +2340,16 @@ function update() {
         });
         spawnShockwave(e.x, e.y, '#66aaff', e.radius + 14, 12, 2);
       }
-    } else if ((e.type !== 'spawner' || game.enemies.length < 20) && !bossCharging) {
+    } else if (e.type === 'boss') {
+      // The boss does NOT relentlessly chase. It only drifts slowly toward the
+      // player while idle (not telegraphing / dashing / recovering), so you
+      // always have room to reposition. Its real threat is the committed dash,
+      // which locks a direction and never tracks you mid-attack.
+      if (e.chargeFlash <= 0 && dToPlayer > e.radius + p.radius) {
+        e.x += Math.cos(angleToPlayer) * e.speed * 0.38;
+        e.y += Math.sin(angleToPlayer) * e.speed * 0.38;
+      }
+    } else if (e.type !== 'spawner' || game.enemies.length < 20) {
       if (dToPlayer > e.radius + p.radius) {
         e.x += Math.cos(angleToPlayer) * e.speed;
         e.y += Math.sin(angleToPlayer) * e.speed;
@@ -2374,18 +2381,20 @@ function update() {
         e.phaseTimer = 0;
       }
       
-      // Charge attack — telegraph (red flash) then a committed dash in a
-      // FIXED direction so the player can dodge sideways and make it miss.
-      if (e.phase === 1 && e.chargeCooldown <= 0) {
-        e.chargeFlash = 45;            // longer telegraph = fair reaction window
+      // Charge attack — long telegraph, then a committed dash in a FIXED
+      // direction. The boss stays put during the windup and never re-aims, so
+      // you can read it and simply step out of the line.
+      // Available in the melee phases (0 and 1); phase 2 is the ranged volley.
+      if (e.phase !== 2 && e.chargeCooldown <= 0) {
+        e.chargeFlash = 64;            // ~0.55s of clear warning before the dash
         e.chargeAngle = angleToPlayer; // lock aim at the player's position NOW
-        e.chargeCooldown = 120;
+        e.chargeCooldown = 150;        // breathing room between charges
       }
-      if (e.chargeFlash > 5 && e.chargeFlash < 25) {
+      if (e.chargeFlash > 6 && e.chargeFlash < 34) {
         // Dash along the locked-in angle, NOT the player's current position.
-        e.knockbackX += Math.cos(e.chargeAngle) * 8;
-        e.knockbackY += Math.sin(e.chargeAngle) * 8;
-        spawnParticles(e.x, e.y, '#ff2244', 10, 3, 15, 2);
+        e.knockbackX += Math.cos(e.chargeAngle) * 7.5;
+        e.knockbackY += Math.sin(e.chargeAngle) * 7.5;
+        spawnParticles(e.x, e.y, '#ff2244', 8, 3, 15, 2);
       }
 
       // Phase 2: ranged volley — a fan of slow orbs aimed where you stand NOW,
@@ -3024,16 +3033,35 @@ function render() {
   for (const e of game.enemies) {
     ctx.save();
     
-    // Charge telegraph ring
-    if (e.chargeFlash > 10) {
-      const pulse = (e.chargeFlash / 30);
-      ctx.strokeStyle = `rgba(255,50,50,${pulse * 0.5})`;
-      ctx.lineWidth = 2 * pulse;
+    // Charge telegraph — pulsing ring + a beam showing the LOCKED dash
+    // direction, so you know exactly which way to step to dodge.
+    if (e.chargeFlash > 6) {
+      const pulse = Math.min(1.4, e.chargeFlash / 34);
+      ctx.save();
+      ctx.strokeStyle = `rgba(255,60,60,${0.35 + 0.35 * Math.sin(game.gameTime * 0.4)})`;
+      ctx.lineWidth = 3 * pulse;
       ctx.shadowColor = '#ff0000';
-      ctx.shadowBlur = 20 * pulse;
+      ctx.shadowBlur = 18 * pulse;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.radius + (30 - e.chargeFlash) * 0.5, 0, Math.PI * 2);
+      ctx.arc(e.x, e.y, e.radius + 6 + Math.sin(game.gameTime * 0.3) * 3, 0, Math.PI * 2);
       ctx.stroke();
+      // Aim beam along the committed direction
+      if (e.type === 'boss' && e.chargeAngle !== undefined) {
+        const len = 200;
+        const ca = Math.cos(e.chargeAngle), sa = Math.sin(e.chargeAngle);
+        const grad = ctx.createLinearGradient(e.x, e.y, e.x + ca * len, e.y + sa * len);
+        grad.addColorStop(0, 'rgba(255,40,60,0.45)');
+        grad.addColorStop(1, 'rgba(255,40,60,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = e.radius * 1.4;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(e.x + ca * e.radius, e.y + sa * e.radius);
+        ctx.lineTo(e.x + ca * len, e.y + sa * len);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
     
     // Body — type-specific procedural sprite (+ eyes)
