@@ -155,6 +155,8 @@
     display: flex;
     gap: 12px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .diff-select {
     display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; justify-content: center;
@@ -257,7 +259,13 @@
     font-weight: 500;
     letter-spacing: 0.2px;
   }
-  
+  .char-card.locked { opacity: 0.55; cursor: default; }
+  .char-card.locked:hover { transform: none; background: rgba(255,255,255,0.04); }
+  .char-card .lock-badge { font-size: 10px; color: #ffcc44; margin-top: 4px; font-weight: 600; }
+  .si-section-header { grid-column: 1 / -1; padding: 14px 4px 6px; font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.08); }
+
   /* ─── HUD ─── */
   #hud {
     position: absolute;
@@ -1323,6 +1331,28 @@ function svgChain(color) {
   </svg>`;
 }
 
+function svgVerdant(color) {
+  const c = color || '#44ff88';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <path d="M24 40 C24 40 10 30 10 18 C10 10 24 6 24 6 C24 6 38 10 38 18 C38 30 24 40 24 40Z" fill="${c}" opacity="0.15"/>
+    <path d="M24 36 C24 36 13 27 13 18 C13 12 24 9 24 9 C24 9 35 12 35 18 C35 27 24 36 24 36Z" fill="${c}" opacity="0.4"/>
+    <line x1="24" y1="10" x2="24" y2="38" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="24" y1="20" x2="17" y2="14" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <line x1="24" y1="27" x2="31" y2="21" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <circle cx="24" cy="24" r="3" fill="${c}" opacity="0.85"/>
+  </svg>`;
+}
+function svgVortex(color) {
+  const c = color || '#6644ff';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <circle cx="24" cy="24" r="16" fill="none" stroke="${c}" stroke-width="1.5" opacity="0.2"/>
+    <circle cx="24" cy="24" r="10" fill="none" stroke="${c}" stroke-width="1.5" opacity="0.35"/>
+    <circle cx="24" cy="24" r="4" fill="${c}" opacity="0.75"/>
+    <path d="M24 8 A16 16 0 0 1 40 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M24 14 A10 10 0 0 1 34 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  </svg>`;
+}
+
 // ─── ICON MAP ───
 const ICON_MAP = {
   flame: svgFlame, sparkle: svgSparkle, prism: svgPrism, echo: svgEcho,
@@ -1331,6 +1361,7 @@ const ICON_MAP = {
   trail: svgTrail, radiance: svgRadiance, wind: svgWind,
   heart_flame: svgHeartFlame, ember: svgEmber,
   starburst: svgStarburst, magnet: svgMagnet, chain: svgChain,
+  verdant: svgVerdant, vortex: svgVortex,
 };
 
 function getIconSVG(name, color) {
@@ -1349,6 +1380,10 @@ const CHARACTERS = [
     bonus: { projectiles:1 }, passives:'shatter' },
   { id:'echo',   name:'Echo',   icon:'echo',   desc:'Resonant wisps that hunt the gloom',   ability:'Homing projectiles + echo on kill', color:'#44ffaa', glow:'#22dd88',
     bonus: { }, passives:'homing' },
+  { id:'verdant', name:'Verdant', icon:'verdant', desc:'Lebendiges Licht, das durch den Kampf heilt', ability:'Lebensweg · +4 HP pro Kill · Naturhauch-Aura',
+    bonus: { hp: 20 }, color:'#44ff88', glow:'#22cc66', unlock: 1500 },
+  { id:'vortex',  name:'Vortex',  icon:'vortex',  desc:'Urkraft der Gravitation — kein Feind entkommt', ability:'Gravitationspuls · Alle 5s Sogwelle + Schaden',
+    bonus: { damage: 3 }, color:'#6644ff', glow:'#4422dd', unlock: 3000 },
 ];
 
 // ─── UPGRADES ───
@@ -1412,6 +1447,9 @@ function setBank(v) { Store.set('ww_bank', String(Math.max(0, Math.round(v)))); 
 function getShopLevels() { try { return JSON.parse(Store.get('ww_shop') || '{}') || {}; } catch (e) { return {}; } }
 function shopLvl(id) { return getShopLevels()[id] || 0; }
 function luminaMult() { return 1 + 0.15 * shopLvl('lumina'); }
+function getCharUnlocks() { try { return JSON.parse(Store.get('ww_chars') || '{}') || {}; } catch(e) { return {}; } }
+function setCharUnlock(id) { const u = getCharUnlocks(); u[id] = true; Store.set('ww_chars', JSON.stringify(u)); }
+function isCharUnlocked(id) { const ch = CHARACTERS.find(c => c.id === id); return !ch || !ch.unlock || !!getCharUnlocks()[id]; }
 function setDifficulty(d) {
   if (!DIFFICULTIES[d]) return;
   game.difficulty = d;
@@ -1558,7 +1596,9 @@ class Player {
     this.dashTimer = 0;
     this.dashDirX = 0; this.dashDirY = 0;
     this.echoTimer = 0;
-    
+    this.vortexTimer = 0;
+    this.vortexPullActive = 0;
+
     // Apply character base bonuses
     if (ch.bonus) {
       if (ch.bonus.damage) this.damage += ch.bonus.damage;
@@ -1787,17 +1827,20 @@ function renderCharSelect() {
   updateDiffButtons();
   const grid = document.getElementById('charGrid');
   grid.innerHTML = '';
+  const unlocks = getCharUnlocks();
   CHARACTERS.forEach((ch, i) => {
+    const locked = ch.unlock && !unlocks[ch.id];
     const card = document.createElement('div');
-    card.className = 'char-card' + (i === game.selectedCharIdx ? ' selected' : '');
+    card.className = 'char-card' + (i === game.selectedCharIdx ? ' selected' : '') + (locked ? ' locked' : '');
     const svg = getIconSVG(ch.icon, ch.color);
     card.innerHTML = `
       <div class="icon-wrap">${svg}</div>
       <div class="name">${ch.name}</div>
       <div class="desc">${ch.desc}</div>
-      <div class="ability">${ch.ability}</div>
+      <div class="ability">${locked ? '🔒 Im Shop freischalten' : ch.ability}</div>
+      ${locked ? `<div class="lock-badge">◈ ${ch.unlock.toLocaleString()}</div>` : ''}
     `;
-    card.onclick = () => { game.selectedCharIdx = i; renderCharSelect(); };
+    if (!locked) card.onclick = () => { game.selectedCharIdx = i; renderCharSelect(); };
     grid.appendChild(card);
   });
   document.getElementById('selectConfirm').disabled = false;
@@ -1805,11 +1848,11 @@ function renderCharSelect() {
 
 function confirmSelect() {
   const ch = CHARACTERS[game.selectedCharIdx];
-  game.character = ch.id;
+  if (!isCharUnlocked(ch.id)) return;
   document.getElementById('select-screen').classList.add('hidden');
-  // Set HUD char icon
   document.getElementById('hudCharIcon').innerHTML = getIconSVG(ch.icon, ch.color);
   document.getElementById('luminaIcon').innerHTML = getIconSVG('diamond', '#ffcc44');
+  game.character = ch.id;
   startGame();
 }
 
@@ -2324,6 +2367,27 @@ function renderShop() {
     if (!maxed) card.querySelector('.si-buy').onclick = () => buyShopItem(item.id);
     grid.appendChild(card);
   }
+
+  // ─── Character unlocks ───
+  const unlocks = getCharUnlocks();
+  const secHeader = document.createElement('div');
+  secHeader.className = 'si-section-header';
+  secHeader.textContent = 'Charaktere freischalten';
+  grid.appendChild(secHeader);
+  for (const ch of CHARACTERS.filter(c => c.unlock)) {
+    const owned = !!unlocks[ch.id];
+    const card2 = document.createElement('div');
+    card2.className = 'shop-item' + (owned ? ' maxed' : '');
+    card2.innerHTML = `
+      <div class="si-name">${ch.name}</div>
+      <div class="si-desc">${ch.ability}</div>
+      <div class="si-pips"><span class="si-pip ${owned ? 'on' : ''}"></span></div>
+      <button class="si-buy" ${owned || ch.unlock > bank ? 'disabled' : ''}>
+        ${owned ? 'ERHALTEN' : '◈ ' + ch.unlock.toLocaleString()}
+      </button>`;
+    if (!owned) card2.querySelector('.si-buy').onclick = () => buyCharUnlock(ch.id);
+    grid.appendChild(card2);
+  }
 }
 function buyShopItem(id) {
   const item = SHOP_ITEMS.find(i => i.id === id);
@@ -2339,6 +2403,17 @@ function buyShopItem(id) {
   Store.set('ww_shop', JSON.stringify(levels));
   sfx('levelup');
   toast(item.name + ' Stufe ' + (lvl + 1));
+  renderShop();
+}
+function buyCharUnlock(id) {
+  const ch = CHARACTERS.find(c => c.id === id);
+  if (!ch || !ch.unlock) return;
+  const bank = getBank();
+  if (ch.unlock > bank) { toast('Nicht genug Lumina'); return; }
+  setBank(bank - ch.unlock);
+  setCharUnlock(id);
+  sfx('levelup');
+  toast(ch.name + ' freigeschaltet!');
   renderShop();
 }
 
@@ -2542,8 +2617,53 @@ function update() {
     }
   }
   
+  // Verdant: nature aura — deals 1 dmg/tick to nearby enemies
+  if (p.charId === 'verdant') {
+    p.burnAura++;
+    if (p.burnAura % 10 === 0) {
+      const dead = [];
+      for (const e of game.enemies) {
+        if (dist(p.x, p.y, e.x, e.y) < 70) {
+          e.hp -= 1;
+          if (e.hp <= 0) dead.push(e);
+          spawnParticles(e.x, e.y, '#44ff88', 2, 1.5, 8, 1.5);
+        }
+      }
+      for (const d of dead) { killEnemy(d); game.enemies = game.enemies.filter(ee => ee !== d); }
+    }
+  }
+
+  // Vortex: gravity pulse every 5s — pulls enemies in and deals 20 damage
+  if (p.charId === 'vortex') {
+    p.vortexTimer++;
+    if (p.vortexTimer >= 300) {
+      p.vortexTimer = 0;
+      p.vortexPullActive = 25;
+      spawnShockwave(p.x, p.y, '#6644ff', 360, 35, 8);
+      spawnShockwave(p.x, p.y, '#9977ff', 200, 20, 5);
+      spawnParticles(p.x, p.y, '#6644ff', 30, 5, 25, 4);
+      game.screenFlash = Math.max(game.screenFlash, 6);
+      const dead = [];
+      for (const e of game.enemies) {
+        if (dist(p.x, p.y, e.x, e.y) < 360) { e.hp -= 20; if (e.hp <= 0) dead.push(e); }
+      }
+      for (const d of dead) { killEnemy(d); game.enemies = game.enemies.filter(ee => ee !== d); }
+    }
+    if (p.vortexPullActive > 0) {
+      p.vortexPullActive--;
+      for (const e of game.enemies) {
+        const d = dist(p.x, p.y, e.x, e.y);
+        if (d < 360 && d > 20) {
+          const a = Math.atan2(p.y - e.y, p.x - e.x);
+          e.x += Math.cos(a) * 6;
+          e.y += Math.sin(a) * 6;
+        }
+      }
+    }
+  }
+
   if (p.invincible > 0) p.invincible--;
-  
+
   // Combo timer
   if (game.comboTimer > 0) game.comboTimer--;
   else game.comboCount = 0;
@@ -2978,9 +3098,13 @@ function killEnemy(e) {
     
     // Wisp: Attacker's trail — short speed boost
     if (p.charId === 'wisp') {
-      // Temporary speed boost implemented via invincible-like effect
-      // Not a full stat but a visual + subtle effect
       spawnParticles(e.x, e.y, '#66ddff', 8, 5, 8, 2);
+    }
+
+    // Verdant: heal 4 HP per kill
+    if (p.charId === 'verdant') {
+      p.hp = Math.min(p.getStats().maxHp, p.hp + 4);
+      spawnParticles(e.x, e.y, '#44ff88', 8, 3, 12, 2);
     }
     
     // Explode on kill upgrade (Sparkburst) — inside guard so chain reactions are blocked
