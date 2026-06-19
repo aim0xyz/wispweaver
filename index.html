@@ -4080,7 +4080,7 @@ function resizeCanvas() {
   game._stars = null;   // regenerate starfield for the new dimensions
   if (game.mode === 'explore' && game.state === 'playing') {
     game.mapW = W * 3; game.mapH = H * 3;
-  } else if (game.state !== 'playing') {
+  } else {
     game.mapW = W; game.mapH = H;
   }
   if (game.player) {
