@@ -156,6 +156,27 @@
     gap: 12px;
     margin-bottom: 20px;
   }
+  .diff-select {
+    display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .diff-btn {
+    padding: 8px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.55);
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.5px; cursor: pointer; transition: all 0.18s;
+  }
+  .diff-btn:hover { background: rgba(255,255,255,0.1); color: #fff; transform: translateY(-1px); }
+  .diff-btn.active {
+    background: linear-gradient(135deg, rgba(255,180,80,0.28), rgba(255,120,40,0.28));
+    border-color: rgba(255,180,80,0.65); color: #ffd9a8;
+    box-shadow: 0 0 14px rgba(255,160,60,0.3);
+  }
+  .diff-desc {
+    font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px;
+    margin-bottom: 22px; min-height: 16px; text-align: center;
+  }
   .char-card {
     width: 150px;
     padding: 18px 12px 14px;
@@ -617,8 +638,48 @@
     cursor: pointer; z-index: 30; transition: all 0.2s;
   }
   #speedBtn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
+  #autoBtn {
+    position: absolute; top: 12px; right: 104px;
+    height: 34px; padding: 0 11px; border-radius: 9px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 30; transition: all 0.2s;
+  }
+  #autoBtn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
+  #autoBtn.active {
+    background: linear-gradient(135deg, rgba(136,255,204,0.28), rgba(68,221,136,0.28));
+    border-color: rgba(136,255,204,0.6);
+    color: #aaffdd;
+    box-shadow: 0 0 14px rgba(136,255,204,0.35);
+  }
+  #autoMenu {
+    position: absolute; top: 52px; right: 12px; z-index: 40;
+    background: rgba(18,16,38,0.97);
+    border: 1px solid rgba(136,255,204,0.25);
+    border-radius: 12px; padding: 6px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+    display: none; flex-direction: column; gap: 3px; min-width: 168px;
+  }
+  #autoMenu.open { display: flex; }
+  #autoMenu .auto-opt {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 11px; border-radius: 8px; cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.7); transition: all 0.15s; border: 1px solid transparent;
+  }
+  #autoMenu .auto-opt:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  #autoMenu .auto-opt .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.35); flex: 0 0 auto;
+  }
+  #autoMenu .auto-opt.sel { background: rgba(136,255,204,0.12); border-color: rgba(136,255,204,0.4); color: #aaffdd; }
+  #autoMenu .auto-opt.sel .dot { background: #aaffdd; border-color: #aaffdd; box-shadow: 0 0 8px rgba(136,255,204,0.6); }
   /* keep wave/lumina clear of the top-right control buttons */
-  #hud .right-stats { padding-right: 92px; }
+  #hud .right-stats { padding-right: 156px; }
   #buildTag {
     position: absolute; bottom: 6px; left: 8px;
     font-size: 9px; letter-spacing: 0.5px;
@@ -659,6 +720,13 @@
   <canvas id="gameCanvas" width="800" height="600"></canvas>
 
   <!-- Speed + Mute controls -->
+  <button id="autoBtn" onclick="toggleAutoMenu()" title="Autopilot mode (P)" aria-label="Autopilot mode">AUTO</button>
+  <div id="autoMenu">
+    <div class="auto-opt" data-mode="off"   onclick="setAutoMode('off')"><span class="dot"></span>Aus</div>
+    <div class="auto-opt" data-mode="steer" onclick="setAutoMode('steer')"><span class="dot"></span>Nur Auto-Steuern</div>
+    <div class="auto-opt" data-mode="pick"  onclick="setAutoMode('pick')"><span class="dot"></span>Nur Auto-Pick</div>
+    <div class="auto-opt" data-mode="both"  onclick="setAutoMode('both')"><span class="dot"></span>Beides</div>
+  </div>
   <button id="speedBtn" onclick="cycleSpeed()" title="Game speed (0.5x / 1x / 2x)" aria-label="Game speed">1×</button>
   <button id="muteBtn" onclick="toggleMute()" title="Sound on/off" aria-label="Toggle sound"></button>
 
@@ -726,6 +794,13 @@
     <h2>Choose your Wisp</h2>
     <div class="hint">Each wisp weaves light differently</div>
     <div class="char-grid" id="charGrid"></div>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn" data-diff="easy"   onclick="setDifficulty('easy')">Leicht</button>
+      <button class="diff-btn" data-diff="normal" onclick="setDifficulty('normal')">Normal</button>
+      <button class="diff-btn" data-diff="hard"   onclick="setDifficulty('hard')">Schwer</button>
+      <button class="diff-btn" data-diff="expert" onclick="setDifficulty('expert')">Experte</button>
+    </div>
+    <div class="diff-desc" id="diffDesc"></div>
     <button class="btn btn-primary" id="selectConfirm" disabled onclick="confirmSelect()">
       <svg viewBox="0 0 20 20" width="18" height="18" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
         <circle cx="10" cy="10" r="8"/>
@@ -1220,7 +1295,7 @@ const CHARACTERS = [
 
 // ─── UPGRADES ───
 const ALL_UPGRADES = [
-  { id:'wider_arc',   icon:'burst',       name:'Radiant Bolts', desc:'Light bolts are 25% larger',          maxLvl:3, color:'#66ddff' },
+  { id:'range',       icon:'wave',        name:'Reaching Light',desc:'Attacks reach 30% farther',           maxLvl:3, color:'#66ddff' },
   { id:'faster_atk',  icon:'bolt',        name:'Quick Flame',   desc:'Attack 20% faster',                  maxLvl:4, color:'#ffdd44' },
   { id:'more_dmg',    icon:'burst',       name:'Bright Ember',  desc:'Damage +25%',                         maxLvl:5, color:'#ff8844' },
   { id:'extra_shot',  icon:'fork',        name:'Forked Light',  desc:'+1 projectile per attack',            maxLvl:3, color:'#ffaa66' },
@@ -1234,6 +1309,33 @@ const ALL_UPGRADES = [
   { id:'chain',       icon:'chain',       name:'Chain Ember',   desc:'Attacks chain to 1 extra enemy',      maxLvl:3, color:'#ff8844' },
 ];
 
+// ─── DIFFICULTY ───
+// Multipliers applied to enemy stats, spawn counts and the player's HP.
+const DIFFICULTIES = {
+  easy:   { name:'Leicht',  enemyHp:0.7, enemyDmg:0.5,  enemySpeed:0.9,  count:0.8,  playerHp:1.4, desc:'Mehr HP, schwächere Gegner — entspanntes Weben.' },
+  normal: { name:'Normal',  enemyHp:1,   enemyDmg:1,    enemySpeed:1,    count:1,    playerHp:1,   desc:'Die ausgewogene Herausforderung.' },
+  hard:   { name:'Schwer',  enemyHp:1.35,enemyDmg:1.45, enemySpeed:1.12, count:1.3,  playerHp:0.85,desc:'Zähere, gefährlichere Gegner und mehr davon.' },
+  expert: { name:'Experte', enemyHp:1.7, enemyDmg:2,    enemySpeed:1.25, count:1.6,  playerHp:0.7, desc:'Nur für Meister-Weber. Ein Treffer tut richtig weh.' },
+};
+function diffMods() { return DIFFICULTIES[game.difficulty] || DIFFICULTIES.normal; }
+
+// Unified hostile colour for ALL enemy projectiles — a crimson that stays
+// distinct from every player colour (orange / cyan / purple / green).
+const ENEMY_SHOT = { color: '#ff2e4d', glow: '#ff0033', core: '#ffc0cb' };
+function setDifficulty(d) {
+  if (!DIFFICULTIES[d]) return;
+  game.difficulty = d;
+  try { Store.set('ww_diff', d); } catch (e) {}
+  updateDiffButtons();
+  try { Sound.resume(); sfx('hit'); } catch (e) {}
+}
+function updateDiffButtons() {
+  document.querySelectorAll('.diff-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.diff === game.difficulty));
+  const desc = document.getElementById('diffDesc');
+  if (desc) desc.textContent = diffMods().desc;
+}
+
 // ─── GAME STATE ───
 let game = {
   state: 'menu',
@@ -1246,7 +1348,9 @@ let game = {
   upgradeLevels: {},
   enemies: [],
   projectiles: [],
+  enemyProjectiles: [],
   particles: [],
+  shockwaves: [],
   damageTexts: [],
   trail: [],
   player: null,
@@ -1264,6 +1368,8 @@ let game = {
   screenFlash: 0,
   hitStop: 0,
   gameSpeed: 1,
+  autoMode: 'off',   // 'off' | 'steer' | 'pick' | 'both'
+  difficulty: 'normal',
   touchActive: false,
   moveX: 0, moveY: 0,
   joyOrigin: null, joyKnob: null,
@@ -1325,6 +1431,7 @@ class LuminaOrb {
           game.lumina++;
           game.totalLumina++;
           spawnParticles(this.x, this.y, '#ffcc44', 5, 2, 12, 2);
+          spawnShockwave(this.x, this.y, '#ffe08a', 16, 12, 2);
         }
       }
     }
@@ -1365,6 +1472,10 @@ class Player {
       if (ch.bonus.attackRate) this.attackRate += ch.bonus.attackRate;
       if (ch.bonus.projectiles) this.projectiles += ch.bonus.projectiles;
     }
+
+    // Difficulty: scale the player's starting/max HP.
+    this.maxHp = Math.round(this.maxHp * diffMods().playerHp);
+    this.hp = this.maxHp;
   }
 
   getStats() {
@@ -1372,7 +1483,8 @@ class Player {
     return {
       speed: this.speed * (1 + 0.15 * (u.move_speed || 0)),
       attackRate: Math.max(6, this.attackRate - 3 * (u.faster_atk || 0)),
-      attackArc: this.attackArc * (1 + 0.35 * (u.wider_arc || 0)),
+      attackArc: this.attackArc,
+      range: 1 + 0.3 * (u.range || 0),
       damage: this.damage * (1 + 0.25 * (u.more_dmg || 0)),
       projectiles: this.projectiles + (u.extra_shot || 0),
       trailDuration: this.trailDuration * (1 + 0.4 * (u.longer_trail || 0)),
@@ -1439,6 +1551,18 @@ class Enemy {
         this.spawnTimer = 120;
         this.spawnRate = Math.max(60, 180 - wave * 5);
         break;
+      case 'caster':
+        this.radius = 13;
+        this.hp = 22 + wave * 3;
+        this.maxHp = this.hp;
+        this.speed = 1.0 + wave * 0.03;
+        this.damage = 7 + Math.floor(wave * 0.4);
+        this.color = '#3366cc';
+        this.glow = '#2244aa';
+        this.score = 20;
+        this.castCooldown = 60 + Math.floor(Math.random() * 40);
+        this.preferredDist = 230;   // tries to hold this range and shoot
+        break;
       case 'boss':
         this.radius = 32;
         this.hp = 200 + wave * 40;
@@ -1451,8 +1575,16 @@ class Enemy {
         this.phaseTimer = 0;
         this.phase = 0;
         this.chargeCooldown = 0;
+        this.chargeAngle = 0;       // direction locked in when the charge telegraphs
         break;
     }
+
+    // Difficulty: scale enemy HP, damage and speed.
+    const dm = diffMods();
+    this.hp = Math.max(1, Math.round(this.hp * dm.enemyHp));
+    this.maxHp = this.hp;
+    this.damage = Math.max(1, Math.round(this.damage * dm.enemyDmg));
+    this.speed *= dm.enemySpeed;
   }
 
   takeDamage(amount) {
@@ -1549,6 +1681,7 @@ function startSelect() {
 }
 
 function renderCharSelect() {
+  updateDiffButtons();
   const grid = document.getElementById('charGrid');
   grid.innerHTML = '';
   CHARACTERS.forEach((ch, i) => {
@@ -1585,7 +1718,9 @@ function startGame() {
   game.totalLumina = 0;
   game.enemies = [];
   game.projectiles = [];
+  game.enemyProjectiles = [];
   game.particles = [];
+  game.shockwaves = [];
   game.trail = [];
   game.damageTexts = [];
   game.luminaOrbs = [];
@@ -1617,6 +1752,7 @@ function startGame() {
   game.waveActive = true;
   
   if (game.animFrame) cancelAnimationFrame(game.animFrame);
+  _lastFrame = 0; _stepAccum = 0;
   gameLoop();
 }
 
@@ -1673,6 +1809,17 @@ function spawnParticles(x, y, color, count, speed, life, size) {
   }
 }
 
+// Expanding ring of light — the core "juice" for kills, hits and level-ups.
+function spawnShockwave(x, y, color, maxR, life, width) {
+  game.shockwaves.push({
+    x, y, color,
+    maxR: maxR || 60,
+    life: life || 24,
+    maxLife: life || 24,
+    width: width || 4,
+  });
+}
+
 function spawnLumina(x, y, count) {
   for (let i = 0; i < count; i++) {
     const orb = new LuminaOrb(
@@ -1684,8 +1831,8 @@ function spawnLumina(x, y, count) {
 }
 
 function getEnemyCountForWave(wave) {
-  if (wave % 5 === 0) return 6 + wave;
-  return 8 + wave * 2;
+  const base = (wave % 5 === 0) ? 6 + wave : 8 + wave * 2;
+  return Math.max(3, Math.round(base * diffMods().count));
 }
 
 // Directional spread: shot 1 = forward, 2 = back, 3 = left, 4 = right,
@@ -1708,11 +1855,12 @@ function playerAttack() {
   const stats = p.getStats();
   sfx('shoot');
 
+  const targetRange = 350 * stats.range;
   let nearest = null;
   let nearDist = Infinity;
   for (const e of game.enemies) {
     const d = dist(p.x, p.y, e.x, e.y);
-    if (d < nearDist && d < 350) { nearDist = d; nearest = e; }
+    if (d < nearDist && d < targetRange) { nearDist = d; nearest = e; }
   }
 
   // Primary direction: aim at the nearest enemy, else along facing / input.
@@ -1729,13 +1877,13 @@ function playerAttack() {
 
   const count = stats.projectiles;
   const offsets = getSpreadOffsets(count);
-  const projRadius = 5 * (1 + 0.25 * (game.upgradeLevels.wider_arc || 0));
+  const projLife = Math.round(80 * stats.range);   // travel distance scales with range
 
   // First offset (0) always fires straight at the target — the rest fan out.
   for (const offset of offsets) {
     const angle = baseAngle + offset;
     const proj = new Projectile(p.x, p.y, angle, 7, stats.damage, true, p.color, p.glow, stats.chain);
-    proj.radius = projRadius;
+    proj.life = projLife;
     game.projectiles.push(proj);
   }
 
@@ -1774,6 +1922,7 @@ function upgradeScreen() {
     const lvl = (game.upgradeLevels[upg.id] || 0) + 1;
     const card = document.createElement('div');
     card.className = 'upgrade-card';
+    card.dataset.upgId = upg.id;
     const svg = getIconSVG(upg.icon, upg.color || '#ff8800');
     card.innerHTML = `
       <div class="icon-wrap">${svg}</div>
@@ -1783,6 +1932,12 @@ function upgradeScreen() {
     `;
     card.onclick = () => {
       sfx('levelup');
+      // Level-up flourish on the wisp
+      if (game.player) {
+        spawnShockwave(game.player.x, game.player.y, upg.color || '#ffdd66', 90, 28, 5);
+        spawnParticles(game.player.x, game.player.y, upg.color || '#ffdd66', 24, 4, 30, 3);
+        game.screenFlash = Math.max(game.screenFlash, 5);
+      }
       game.upgradeLevels[upg.id] = lvl;
       // Kindled Heart heals +30 HP per level, not just raises max
       if (upg.id === 'max_hp' && game.player) {
@@ -1794,6 +1949,9 @@ function upgradeScreen() {
     };
     grid.appendChild(card);
   });
+
+  // Autopilot resolves the pick itself after a brief beat so it stays visible.
+  if (autoPickOn()) setTimeout(() => { if (game.state === 'upgrade') autoPickUpgrade(); }, 650);
 }
 
 function nextWave() {
@@ -1950,19 +2108,31 @@ function closeLeaderboard() {
 }
 
 // ─── GAME LOOP ───
+// Logic runs at a fixed 60 Hz tick, decoupled from the display refresh rate so
+// movement feels equally direct on 30 / 60 / 120 Hz screens and never slows
+// down ("laggy") when the render framerate dips under load.
 let _stepAccum = 0;
-function gameLoop() {
-  // Game-speed multiplier (0.5x / 1x / 2x) via fixed-step accumulation.
+let _lastFrame = 0;
+const STEP_MS = 1000 / 60;               // one logical tick
+function gameLoop(ts) {
+  if (ts === undefined) ts = performance.now();
+  if (!_lastFrame) _lastFrame = ts;
+  let frameMs = ts - _lastFrame;
+  _lastFrame = ts;
+  if (frameMs > 250) frameMs = 250;      // clamp tab-switch / GC stalls
+
+  // Game-speed multiplier (0.5x / 1x / 2x) folds into the real-time step.
   if (game.state === 'playing') {
-    _stepAccum += (game.gameSpeed || 1);
+    _stepAccum += (frameMs / STEP_MS) * (game.gameSpeed || 1);
     let steps = 0;
-    while (_stepAccum >= 1 && steps < 4) {   // cap to avoid spiral-of-death
+    while (_stepAccum >= 1 && steps < 6) {   // cap to avoid spiral-of-death
       _stepAccum -= 1;
       steps++;
       if (game.hitStop > 0) { game.hitStop--; continue; }  // hit-stop freeze
       update();
       if (game.state !== 'playing') break;     // gameOver flipped state
     }
+    if (_stepAccum > 4) _stepAccum = 0;    // drop backlog instead of fast-forwarding
   } else {
     _stepAccum = 0;
   }
@@ -2010,6 +2180,11 @@ function update() {
     if (game.keys['s'] || game.keys['arrowdown']) dy = 1;
     if (game.keys['a'] || game.keys['arrowleft']) dx = -1;
     if (game.keys['d'] || game.keys['arrowright']) dx = 1;
+  }
+  // Autopilot — drives the wisp only when the player gives no manual input.
+  if (autoSteerOn() && dx === 0 && dy === 0 && !game.touchActive) {
+    const v = computeAutoMove(p, stats);
+    dx = v.x; dy = v.y;
   }
   let mag = Math.hypot(dx, dy);
   if (mag > 1) { dx /= mag; dy /= mag; mag = 1; }   // cap (normalises diagonals too)
@@ -2141,10 +2316,12 @@ function update() {
         if (game.spawnTimer <= 0) {
           const types = ['gloomling'];
           if (game.wave >= 3) types.push('runner');
+          if (game.wave >= 4) types.push('caster');
           if (game.wave >= 5) types.push('blight');
           if (game.wave >= 4 && Math.random() < 0.12) types.push('spawner');
           // More variety at higher waves
           if (game.wave >= 6 && Math.random() < 0.3) types.push('runner');
+          if (game.wave >= 7 && Math.random() < 0.25) types.push('caster');
           if (game.wave >= 8 && Math.random() < 0.1) types.push('blight');
           const type = types[Math.floor(Math.random() * types.length)];
           spawnEnemy(type);
@@ -2174,7 +2351,39 @@ function update() {
     const angleToPlayer = Math.atan2(p.y - e.y, p.x - e.x);
     const dToPlayer = dist(e.x, e.y, p.x, p.y);
     
-    if (e.type !== 'spawner' || game.enemies.length < 20) {
+    if (e.type === 'caster') {
+      // Kiter: hold a preferred range, strafe, and fire dodgeable bolts.
+      if (dToPlayer < e.preferredDist - 30) {
+        e.x -= Math.cos(angleToPlayer) * e.speed;        // back away
+        e.y -= Math.sin(angleToPlayer) * e.speed;
+      } else if (dToPlayer > e.preferredDist + 30) {
+        e.x += Math.cos(angleToPlayer) * e.speed;        // close in
+        e.y += Math.sin(angleToPlayer) * e.speed;
+      } else {
+        e.x += Math.cos(angleToPlayer + Math.PI / 2) * e.speed * 0.6;  // strafe
+        e.y += Math.sin(angleToPlayer + Math.PI / 2) * e.speed * 0.6;
+      }
+      e.castCooldown--;
+      if (e.castCooldown <= 0 && dToPlayer < 460) {
+        e.castCooldown = 95 + Math.floor(Math.random() * 50);
+        const spd = 3.6;
+        game.enemyProjectiles.push({
+          x: e.x, y: e.y,
+          vx: Math.cos(angleToPlayer) * spd, vy: Math.sin(angleToPlayer) * spd,
+          radius: 6, damage: e.damage, life: 180, color: ENEMY_SHOT.color, glow: ENEMY_SHOT.glow,
+        });
+        spawnShockwave(e.x, e.y, ENEMY_SHOT.color, e.radius + 14, 12, 2);
+      }
+    } else if (e.type === 'boss') {
+      // The boss does NOT relentlessly chase. It only drifts slowly toward the
+      // player while idle (not telegraphing / dashing / recovering), so you
+      // always have room to reposition. Its real threat is the committed dash,
+      // which locks a direction and never tracks you mid-attack.
+      if (e.chargeFlash <= 0 && dToPlayer > e.radius + p.radius) {
+        e.x += Math.cos(angleToPlayer) * e.speed * 0.38;
+        e.y += Math.sin(angleToPlayer) * e.speed * 0.38;
+      }
+    } else if (e.type !== 'spawner' || game.enemies.length < 20) {
       if (dToPlayer > e.radius + p.radius) {
         e.x += Math.cos(angleToPlayer) * e.speed;
         e.y += Math.sin(angleToPlayer) * e.speed;
@@ -2206,17 +2415,42 @@ function update() {
         e.phaseTimer = 0;
       }
       
-      // Charge attack - telegraph with red flash
-      if (e.phase === 1 && e.chargeCooldown <= 0) {
-        e.chargeFlash = 30;
-        e.chargeCooldown = 120;
+      // Charge attack — long telegraph, then a committed dash in a FIXED
+      // direction. The boss stays put during the windup and never re-aims, so
+      // you can read it and simply step out of the line.
+      // Available in the melee phases (0 and 1); phase 2 is the ranged volley.
+      if (e.phase !== 2 && e.chargeCooldown <= 0) {
+        e.chargeFlash = 64;            // ~0.55s of clear warning before the dash
+        e.chargeAngle = angleToPlayer; // lock aim at the player's position NOW
+        e.chargeCooldown = 150;        // breathing room between charges
       }
-      if (e.chargeFlash > 15 && e.chargeFlash < 25) {
-        // Charge! 
-        const a = angleToPlayer;
-        e.knockbackX += Math.cos(a) * 7;
-        e.knockbackY += Math.sin(a) * 7;
-        spawnParticles(e.x, e.y, '#ff2244', 10, 3, 15, 2);
+      if (e.chargeFlash > 6 && e.chargeFlash < 34) {
+        // Dash along the locked-in angle, NOT the player's current position.
+        e.knockbackX += Math.cos(e.chargeAngle) * 7.5;
+        e.knockbackY += Math.sin(e.chargeAngle) * 7.5;
+        spawnParticles(e.x, e.y, '#ff2244', 8, 3, 15, 2);
+      }
+
+      // Phase 2: ranged volley — a fan of slow orbs aimed where you stand NOW,
+      // so you can read it and step out of the way.
+      if (e.volleyCooldown === undefined) e.volleyCooldown = 90;
+      e.volleyCooldown--;
+      if (e.phase === 2 && e.volleyCooldown <= 0) {
+        e.volleyCooldown = 110;
+        const shots = 5;
+        const spread = 0.5;   // radians, total fan width is 2*spread
+        for (let s = 0; s < shots; s++) {
+          const a = angleToPlayer + (s / (shots - 1) - 0.5) * 2 * spread;
+          const spd = 3.4;
+          game.enemyProjectiles.push({
+            x: e.x, y: e.y,
+            vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+            radius: 7, damage: Math.round(e.damage * 0.55),
+            life: 200, color: ENEMY_SHOT.color, glow: ENEMY_SHOT.glow,
+          });
+        }
+        spawnShockwave(e.x, e.y, ENEMY_SHOT.color, e.radius + 24, 16, 3);
+        sfx('hit');
       }
     }
     
@@ -2308,7 +2542,37 @@ function update() {
     game.particles[i].update();
     if (game.particles[i].life <= 0) game.particles.splice(i, 1);
   }
-  
+
+  // Update shockwave rings
+  for (let i = game.shockwaves.length - 1; i >= 0; i--) {
+    game.shockwaves[i].life--;
+    if (game.shockwaves[i].life <= 0) game.shockwaves.splice(i, 1);
+  }
+
+  // Update enemy projectiles (boss volleys) — can be dodged
+  for (let i = game.enemyProjectiles.length - 1; i >= 0; i--) {
+    const ep = game.enemyProjectiles[i];
+    ep.x += ep.vx; ep.y += ep.vy; ep.life--;
+    if (ep.life <= 0 || ep.x < -40 || ep.x > W + 40 || ep.y < -40 || ep.y > H + 40) {
+      game.enemyProjectiles.splice(i, 1);
+      continue;
+    }
+    if (dist(ep.x, ep.y, p.x, p.y) < ep.radius + p.radius) {
+      if (p.invincible <= 0) {
+        p.hp -= ep.damage;
+        p.invincible = 20;
+        game.screenShake = Math.max(game.screenShake, 8);
+        game.screenFlash = Math.max(game.screenFlash, 4);
+        sfx('hurt');
+        spawnParticles(p.x, p.y, '#ff4466', 16, 4, 18, 3);
+        spawnShockwave(p.x, p.y, '#ff4466', 50, 18, 4);
+        game.damageTexts.push(new DamageText(p.x, p.y - 20, `-${ep.damage}`, '#ff4466', 22));
+        game.enemyProjectiles.splice(i, 1);
+        if (p.hp <= 0) { gameOver(); return; }
+      }
+    }
+  }
+
   // Update damage texts
   for (let i = game.damageTexts.length - 1; i >= 0; i--) {
     game.damageTexts[i].update();
@@ -2351,11 +2615,22 @@ function killEnemy(e) {
   // Death explosion - layered
   const colors = ['#ff8800', '#ffcc44', '#ffffff', '#ff6600'];
   for (let c = 0; c < 3; c++) {
-    spawnParticles(e.x, e.y, colors[Math.floor(Math.random()*colors.length)], 
-      10 + Math.floor(Math.random()*10), 
-      2 + Math.random() * 3, 
-      20 + Math.random() * 20, 
+    spawnParticles(e.x, e.y, colors[Math.floor(Math.random()*colors.length)],
+      10 + Math.floor(Math.random()*10),
+      2 + Math.random() * 3,
+      20 + Math.random() * 20,
       2 + Math.random() * 3);
+  }
+
+  // Shockwave juice — small ring per kill, a big celebratory blast for bosses.
+  if (e.type === 'boss') {
+    spawnShockwave(e.x, e.y, '#ffdd66', 260, 40, 8);
+    spawnShockwave(e.x, e.y, '#ffffff', 180, 30, 5);
+    game.screenShake = Math.max(game.screenShake, 22);
+    game.screenFlash = Math.max(game.screenFlash, 8);
+    game.hitStop = Math.max(game.hitStop, 8);
+  } else {
+    spawnShockwave(e.x, e.y, '#ffcc44', e.radius + 28, 18, 3);
   }
   
   // Score text
@@ -2372,7 +2647,7 @@ function killEnemy(e) {
   if (p && !e._killPending) {
     // Prism: Shatter — 50% damage to nearby enemies (no recursion, queue removal)
     if (p.charId === 'prism') {
-      const radius = 60 + (game.upgradeLevels.wider_arc || 0) * 10;
+      const radius = 60 + (game.upgradeLevels.range || 0) * 10;
       const dmg = Math.round(p.getStats().damage * 0.5);
       for (const other of game.enemies) {
         if (other === e) continue;
@@ -2555,6 +2830,33 @@ function drawEnemyBody(e, faceA) {
     return;
   }
 
+  if (e.type === 'caster') {
+    // Floating crystal that brightens as its bolt is about to fire.
+    const charging = e.castCooldown < 22;
+    const pulse = charging ? 1 + (22 - e.castCooldown) / 22 * 0.25 : 1;
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(t * 0.5 + e.seed);
+    const r = e.radius * pulse;
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(0, -r * 1.3); ctx.lineTo(r, 0); ctx.lineTo(0, r * 1.3); ctx.lineTo(-r, 0);
+    ctx.closePath(); ctx.fill();
+    // inner core glows blue → white when charging
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = flash ? '#fff' : (charging ? '#cfe6ff' : '#88bbff');
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.42, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // telegraph ring while charging
+    if (charging) {
+      ctx.strokeStyle = `rgba(150,200,255,${(22 - e.castCooldown) / 22 * 0.6})`;
+      ctx.lineWidth = 2; ctx.shadowColor = '#66aaff'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + 8, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+    return;
+  }
+
   // gloomling / blight — wobbling shadow blob
   const lobes = e.type === 'blight' ? 5 : 4;
   const amp = e.type === 'blight' ? 0.13 : 0.17;
@@ -2660,24 +2962,59 @@ function render() {
   grad.addColorStop(1, '#080818');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
-  
-  // Stars
+
+  // Drifting nebula clouds — soft colored depth behind everything.
+  if (!game._nebula) {
+    game._nebula = [];
+    const tints = ['#3a2a66', '#27406b', '#5a2a55'];
+    for (let i = 0; i < 3; i++) {
+      game._nebula.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.max(W, H) * (0.28 + Math.random() * 0.18),
+        color: tints[i % tints.length],
+        dx: (Math.random() - 0.5) * 0.12, dy: (Math.random() - 0.5) * 0.12,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+  ctx.globalCompositeOperation = 'lighter';
+  for (const n of game._nebula) {
+    const cx = (n.x + game.gameTime * n.dx) % (W + n.r * 2);
+    const cy = (n.y + game.gameTime * n.dy) % (H + n.r * 2);
+    const breathe = 0.06 + 0.03 * Math.sin(game.gameTime * 0.01 + n.phase);
+    const ng = ctx.createRadialGradient(cx, cy, 0, cx, cy, n.r);
+    ng.addColorStop(0, n.color);
+    ng.addColorStop(1, 'transparent');
+    ctx.globalAlpha = breathe;
+    ctx.fillStyle = ng;
+    ctx.beginPath();
+    ctx.arc(cx, cy, n.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+
+  // Stars — with subtle parallax tied to the player's position for depth.
   if (!game._stars) {
     game._stars = [];
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 90; i++) {
       game._stars.push({
         x: Math.random() * W, y: Math.random() * H,
         r: 0.5 + Math.random() * 1.5,
         a: 0.2 + Math.random() * 0.4,
         phase: Math.random() * Math.PI * 2,
+        depth: 0.2 + Math.random() * 0.8,   // 0..1, far..near
       });
     }
   }
+  const par = game.player ? { x: (game.player.x - W / 2), y: (game.player.y - H / 2) } : { x: 0, y: 0 };
   game._stars.forEach(s => {
+    const ox = -par.x * 0.02 * s.depth;
+    const oy = -par.y * 0.02 * s.depth;
     ctx.globalAlpha = s.a + Math.sin(game.gameTime * 0.02 + s.phase) * 0.12;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.arc(s.x + ox, s.y + oy, s.r, 0, Math.PI * 2);
     ctx.fill();
   });
   ctx.globalAlpha = 1;
@@ -2730,16 +3067,35 @@ function render() {
   for (const e of game.enemies) {
     ctx.save();
     
-    // Charge telegraph ring
-    if (e.chargeFlash > 10) {
-      const pulse = (e.chargeFlash / 30);
-      ctx.strokeStyle = `rgba(255,50,50,${pulse * 0.5})`;
-      ctx.lineWidth = 2 * pulse;
+    // Charge telegraph — pulsing ring + a beam showing the LOCKED dash
+    // direction, so you know exactly which way to step to dodge.
+    if (e.chargeFlash > 6) {
+      const pulse = Math.min(1.4, e.chargeFlash / 34);
+      ctx.save();
+      ctx.strokeStyle = `rgba(255,60,60,${0.35 + 0.35 * Math.sin(game.gameTime * 0.4)})`;
+      ctx.lineWidth = 3 * pulse;
       ctx.shadowColor = '#ff0000';
-      ctx.shadowBlur = 20 * pulse;
+      ctx.shadowBlur = 18 * pulse;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.radius + (30 - e.chargeFlash) * 0.5, 0, Math.PI * 2);
+      ctx.arc(e.x, e.y, e.radius + 6 + Math.sin(game.gameTime * 0.3) * 3, 0, Math.PI * 2);
       ctx.stroke();
+      // Aim beam along the committed direction
+      if (e.type === 'boss' && e.chargeAngle !== undefined) {
+        const len = 200;
+        const ca = Math.cos(e.chargeAngle), sa = Math.sin(e.chargeAngle);
+        const grad = ctx.createLinearGradient(e.x, e.y, e.x + ca * len, e.y + sa * len);
+        grad.addColorStop(0, 'rgba(255,40,60,0.45)');
+        grad.addColorStop(1, 'rgba(255,40,60,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = e.radius * 1.4;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(e.x + ca * e.radius, e.y + sa * e.radius);
+        ctx.lineTo(e.x + ca * len, e.y + sa * len);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
     
     // Body — type-specific procedural sprite (+ eyes)
@@ -2780,7 +3136,34 @@ function render() {
     ctx.fill();
     ctx.restore();
   }
-  
+
+  // Enemy projectiles — hostile crimson with a red (not white) core, so they
+  // never read as the player's own shots.
+  for (const ep of game.enemyProjectiles) {
+    ctx.save();
+    ctx.shadowColor = ep.glow; ctx.shadowBlur = 16;
+    ctx.fillStyle = ep.color;
+    ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = ENEMY_SHOT.core; ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Shockwave rings
+  for (const sw of game.shockwaves) {
+    const t = 1 - sw.life / sw.maxLife;          // 0..1 over lifetime
+    const r = sw.maxR * (1 - Math.pow(1 - t, 2)); // ease-out expansion
+    ctx.save();
+    ctx.globalAlpha = (1 - t) * 0.8;
+    ctx.strokeStyle = sw.color;
+    ctx.lineWidth = sw.width * (1 - t * 0.6);
+    ctx.shadowColor = sw.color; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+
   // Particles
   for (const pt of game.particles) {
     const alpha = pt.life / pt.maxLife;
@@ -2967,6 +3350,17 @@ function render() {
   ctx.fillStyle = vg;
   ctx.fillRect(0, 0, W, H);
 
+  // Low-HP danger pulse — red edges throb when the wisp is near death.
+  const hpFrac = p.hp / p.getStats().maxHp;
+  if (hpFrac < 0.3) {
+    const pulse = (0.25 + 0.2 * Math.sin(game.gameTime * 0.15)) * (1 - hpFrac / 0.3);
+    const dv = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.8);
+    dv.addColorStop(0, 'rgba(255,0,40,0)');
+    dv.addColorStop(1, `rgba(255,0,40,${pulse.toFixed(3)})`);
+    ctx.fillStyle = dv;
+    ctx.fillRect(0, 0, W, H);
+  }
+
   ctx.restore();
 }
 
@@ -2975,6 +3369,9 @@ document.addEventListener('keydown', e => {
   const key = e.key.toLowerCase();
   game.keys[key] = true;
   
+  // Toggle autopilot with P (but not while typing in a field)
+  if (key === 'p' && document.activeElement?.tagName !== 'INPUT') cycleAutoMode();
+
   // Menu keyboard shortcuts
   if (e.key === 'Enter') {
     if (game.state === 'menu') startSelect();
@@ -3098,13 +3495,149 @@ function cycleSpeed() {
   Sound.resume(); sfx('hit');
 }
 
+// ─── AUTOPILOT ───
+// Priority for auto-picking upgrades (highest first). Offence > sustain > utility.
+const AUTO_UPGRADE_PRIORITY = [
+  'more_dmg', 'faster_atk', 'extra_shot', 'range', 'chain', 'explode_kill',
+  'max_hp', 'regen', 'move_speed', 'magnet', 'longer_trail', 'wider_trail'
+];
+
+const AUTO_LABELS = { off:'Aus', steer:'Auto-Steuern', pick:'Auto-Pick', both:'Beides' };
+function autoSteerOn() { return game.autoMode === 'steer' || game.autoMode === 'both'; }
+function autoPickOn()  { return game.autoMode === 'pick'  || game.autoMode === 'both'; }
+
+function updateAutoBtn() {
+  const b = document.getElementById('autoBtn');
+  if (b) b.classList.toggle('active', game.autoMode !== 'off');
+  document.querySelectorAll('#autoMenu .auto-opt').forEach(o =>
+    o.classList.toggle('sel', o.dataset.mode === game.autoMode));
+}
+function toggleAutoMenu() {
+  const m = document.getElementById('autoMenu');
+  if (m) m.classList.toggle('open');
+  Sound.resume();
+}
+function setAutoMode(mode) {
+  if (!AUTO_LABELS[mode]) return;
+  game.autoMode = mode;
+  Store.set('ww_automode', mode);
+  updateAutoBtn();
+  const m = document.getElementById('autoMenu');
+  if (m) m.classList.remove('open');
+  Sound.resume(); sfx('hit');
+  toast(mode === 'off' ? 'Autopilot aus' : 'Autopilot: ' + AUTO_LABELS[mode]);
+  // If auto-pick just turned on while a pick is waiting, resolve it now.
+  if (autoPickOn() && game.state === 'upgrade') autoPickUpgrade();
+}
+// Keyboard "P" cycles through the modes.
+function cycleAutoMode() {
+  const order = ['off', 'steer', 'pick', 'both'];
+  setAutoMode(order[(order.indexOf(game.autoMode) + 1) % order.length]);
+}
+// Close the autopilot menu when clicking anywhere else.
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('autoMenu');
+  const btn = document.getElementById('autoBtn');
+  if (menu && menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn) {
+    menu.classList.remove('open');
+  }
+});
+
+// Steering for the bot: flee danger, grab lumina when safe, hug away from walls.
+function computeAutoMove(p, stats) {
+  let ax = 0, ay = 0;
+
+  // 1. Repel from enemies — stronger the closer they are.
+  for (const e of game.enemies) {
+    const ex = p.x - e.x, ey = p.y - e.y;
+    const d = Math.hypot(ex, ey) || 1;
+    const comfort = e.radius + p.radius + 80;   // keep this much clearance
+    if (d < comfort) {
+      const w = (comfort - d) / comfort;        // 0..1, 1 = touching
+      let mult = w * w * 3.2;
+      if (e.type === 'boss') mult *= 2;
+      // Dodge perpendicular to a charging boss instead of straight back.
+      if (e.type === 'boss' && e.chargeFlash > 5) {
+        const perp = (((p.x * 13 + p.y * 7) | 0) % 2) ? 1 : -1;  // stable side choice
+        ax += -Math.sin(e.chargeAngle) * perp * mult * 1.5;
+        ay += Math.cos(e.chargeAngle) * perp * mult * 1.5;
+      }
+      ax += (ex / d) * mult;
+      ay += (ey / d) * mult;
+    }
+  }
+
+  // 1b. Dodge incoming enemy projectiles (boss volleys).
+  for (const ep of game.enemyProjectiles) {
+    const ex = p.x - ep.x, ey = p.y - ep.y;
+    const d = Math.hypot(ex, ey) || 1;
+    const danger = ep.radius + p.radius + 70;
+    if (d < danger) {
+      const w = (danger - d) / danger;
+      ax += (ex / d) * w * w * 4;
+      ay += (ey / d) * w * w * 4;
+    }
+  }
+
+  // 2. When not under pressure, drift toward the nearest lumina orb.
+  if (Math.hypot(ax, ay) < 1.1 && game.luminaOrbs.length) {
+    let best = null, bd = Infinity;
+    for (const o of game.luminaOrbs) {
+      const d = dist(p.x, p.y, o.x, o.y);
+      if (d < bd) { bd = d; best = o; }
+    }
+    if (best) {
+      const d = Math.hypot(best.x - p.x, best.y - p.y) || 1;
+      ax += ((best.x - p.x) / d) * 0.7;
+      ay += ((best.y - p.y) / d) * 0.7;
+    }
+  }
+
+  // 3. Stay off the walls so the bot can't get cornered.
+  const margin = 90;
+  if (p.x < margin)       ax += (margin - p.x) / margin * 1.8;
+  if (p.x > W - margin)   ax -= (p.x - (W - margin)) / margin * 1.8;
+  if (p.y < margin)       ay += (margin - p.y) / margin * 1.8;
+  if (p.y > H - margin)   ay -= (p.y - (H - margin)) / margin * 1.8;
+
+  // 4. Nothing pressing — ease back toward the center to stay mobile.
+  if (Math.abs(ax) < 0.02 && Math.abs(ay) < 0.02) {
+    ax = (W / 2 - p.x) * 0.0015;
+    ay = (H / 2 - p.y) * 0.0015;
+  }
+  return { x: ax, y: ay };
+}
+
+// Auto-choose an upgrade card by priority, then click it.
+function autoPickUpgrade() {
+  const grid = document.getElementById('upgradeGrid');
+  if (!grid) return;
+  const cards = [...grid.querySelectorAll('.upgrade-card')];
+  if (!cards.length) return;
+  let best = cards[0], bestRank = 1e9;
+  for (const card of cards) {
+    const id = card.dataset.upgId;
+    const rank = AUTO_UPGRADE_PRIORITY.indexOf(id);
+    const r = rank === -1 ? 999 : rank;
+    if (r < bestRank) { bestRank = r; best = card; }
+  }
+  best.click();
+}
+
 // Initial setup — guarded so a single failure can never blank the whole game
 try {
   const savedSpeed = parseFloat(Store.get('ww_speed'));
   if (SPEEDS.includes(savedSpeed)) game.gameSpeed = savedSpeed;
+  const savedAuto = Store.get('ww_automode');
+  if (AUTO_LABELS[savedAuto]) game.autoMode = savedAuto;
+  else if (Store.get('ww_auto') === '1') game.autoMode = 'both';   // migrate old on/off setting
+  const savedDiff = Store.get('ww_diff');
+  if (DIFFICULTIES[savedDiff]) game.difficulty = savedDiff;
   resizeCanvas();
   updateMuteIcon();
   updateSpeedBtn();
+  updateAutoBtn();
+  updateDiffButtons();
   updateMenuBest();
   const bt = document.getElementById('buildTag');
   if (bt && !bt.textContent) bt.textContent = BUILD;
