@@ -1399,14 +1399,14 @@ const POWERUP_KEYS = Object.keys(POWERUPS);
 // ─── LUMINA SHOP (meta-progression) ─── permanent upgrades bought with banked
 // lumina. Levels persist in localStorage; effects apply at the start of a run.
 const SHOP_ITEMS = [
-  { id: 'hp',      name: 'Lebenskern',   desc: '+25 Max-HP pro Stufe',           maxLvl: 5, base: 40 },
-  { id: 'dmg',     name: 'Glutkern',     desc: '+8% Schaden pro Stufe',          maxLvl: 5, base: 50 },
-  { id: 'speed',   name: 'Windschritt',  desc: '+5% Bewegungstempo pro Stufe',   maxLvl: 4, base: 45 },
-  { id: 'dashcd',  name: 'Phasenschritt',desc: 'Dash-Abklingzeit −12% pro Stufe',maxLvl: 3, base: 60 },
-  { id: 'lumina',  name: 'Lichtsog',     desc: '+15% Lumina-Ertrag pro Stufe',   maxLvl: 4, base: 35 },
-  { id: 'revive',  name: 'Zweites Licht',desc: 'Starte mit einer Wiederbelebung',maxLvl: 1, base: 220 },
+  { id: 'hp',      name: 'Lebenskern',   desc: '+25 Max-HP pro Stufe',           maxLvl: 5, base: 60 },
+  { id: 'dmg',     name: 'Glutkern',     desc: '+8% Schaden pro Stufe',          maxLvl: 5, base: 75 },
+  { id: 'speed',   name: 'Windschritt',  desc: '+5% Bewegungstempo pro Stufe',   maxLvl: 4, base: 68 },
+  { id: 'dashcd',  name: 'Phasenschritt',desc: 'Dash-Abklingzeit −12% pro Stufe',maxLvl: 3, base: 90 },
+  { id: 'lumina',  name: 'Lichtsog',     desc: '+15% Lumina-Ertrag pro Stufe',   maxLvl: 4, base: 53 },
+  { id: 'revive',  name: 'Zweites Licht',desc: 'Starte mit einer Wiederbelebung',maxLvl: 1, base: 330 },
 ];
-function shopCost(item, lvl) { return Math.round(item.base * Math.pow(1.7, lvl)); }
+function shopCost(item, lvl) { return Math.round(item.base * Math.pow(1.8, lvl)); }
 function getBank() { return parseInt(Store.get('ww_bank') || '0', 10) || 0; }
 function setBank(v) { Store.set('ww_bank', String(Math.max(0, Math.round(v)))); }
 function getShopLevels() { try { return JSON.parse(Store.get('ww_shop') || '{}') || {}; } catch (e) { return {}; } }
@@ -2061,18 +2061,18 @@ function roundRectPath(x, y, w, h, r) {
 }
 
 function upgradeScreen() {
-  game.state = 'upgrade';
-  document.getElementById('upgrade-screen').classList.remove('hidden');
-  document.getElementById('upWaveNum').textContent = game.wave;
-  
-  const grid = document.getElementById('upgradeGrid');
-  grid.innerHTML = '';
-  
   const available = ALL_UPGRADES.filter(u => (game.upgradeLevels[u.id] || 0) < u.maxLvl);
   const shuffled = [...available].sort(() => Math.random() - 0.5);
   const picks = shuffled.slice(0, 3);
-  
+
   if (picks.length === 0) { nextWave(); return; }
+
+  game.state = 'upgrade';
+  document.getElementById('upgrade-screen').classList.remove('hidden');
+  document.getElementById('upWaveNum').textContent = game.wave;
+
+  const grid = document.getElementById('upgradeGrid');
+  grid.innerHTML = '';
   
   picks.forEach(upg => {
     const lvl = (game.upgradeLevels[upg.id] || 0) + 1;
@@ -2598,8 +2598,8 @@ function update() {
       // Wave complete
       if (game.enemiesSpawned >= totalEnemies && game.enemies.length === 0 && !game.bossActive) {
         game.waveActive = false;
-        game.lumina += 10 + game.wave * 2;
-        game.totalLumina += 10 + game.wave * 2;
+        game.lumina += 5 + game.wave;
+        game.totalLumina += 5 + game.wave;
         game.screenFlash = 8;
         setTimeout(() => upgradeScreen(), 400);
       }
@@ -2895,7 +2895,7 @@ function killEnemy(e) {
   }
   
   // Lumina drops as orbs
-  const dropCount = e.type === 'boss' ? 25 : e.type === 'blight' ? 6 : e.type === 'spawner' ? 5 : 3;
+  const dropCount = e.type === 'boss' ? 25 : e.type === 'blight' ? 6 : e.type === 'spawner' ? 5 : 2;
   spawnLumina(e.x, e.y, dropCount);
 
   // Rare power-up drop — bosses always, tougher foes sometimes, fodder rarely.
