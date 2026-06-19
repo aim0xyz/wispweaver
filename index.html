@@ -1361,7 +1361,7 @@ const ALL_UPGRADES = [
   { id:'wider_trail', icon:'radiance',    name:'Radiant Path',  desc:'Trail is 50% wider',                 maxLvl:2, color:'#88ddff' },
   { id:'move_speed',  icon:'wind',        name:'Zephyr Step',   desc:'Move speed +15%',                    maxLvl:3, color:'#88ffcc' },
   { id:'max_hp',      icon:'heart_flame', name:'Kindled Heart', desc:'Max HP +30',                         maxLvl:4, color:'#ff4466' },
-  { id:'regen',       icon:'ember',       name:'Slow Burn',     desc:'Regen 1 HP every 3s',                maxLvl:3, color:'#ff8844' },
+  { id:'regen',       icon:'ember',       name:'Slow Burn',     desc:'Regen +1 HP/s pro Stufe',            maxLvl:3, color:'#ff8844' },
   { id:'explode_kill',icon:'starburst',   name:'Sparkburst',    desc:'Killed enemies explode',             maxLvl:2, color:'#ffaa22' },
   { id:'magnet',      icon:'magnet',      name:'Lumina Pull',   desc:'Attract lumina from further',         maxLvl:3, color:'#ffcc66' },
   { id:'chain',       icon:'chain',       name:'Chain Ember',   desc:'Attacks chain to 1 extra enemy',      maxLvl:3, color:'#ff8844' },
@@ -2482,7 +2482,7 @@ function update() {
   // Regen
   if (stats.regen) {
     p.regenTimer++;
-    const interval = Math.max(120, 180 - 30 * (stats.regenLvl - 1));
+    const interval = Math.round(60 / stats.regenLvl);
     if (p.regenTimer >= interval) { p.regenTimer = 0; p.hp = Math.min(stats.maxHp, p.hp + 1); }
   }
   
