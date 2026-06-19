@@ -2971,7 +2971,8 @@ function update() {
       }
     }
     
-    if (proj.x < -50 || proj.x > W+50 || proj.y < -50 || proj.y > H+50) {
+    if (proj.x < game.camera.x - 50 || proj.x > game.camera.x + W + 50 ||
+        proj.y < game.camera.y - 50 || proj.y > game.camera.y + H + 50) {
       game.projectiles.splice(i, 1);
     }
   }
@@ -2992,7 +2993,8 @@ function update() {
   for (let i = game.enemyProjectiles.length - 1; i >= 0; i--) {
     const ep = game.enemyProjectiles[i];
     ep.x += ep.vx; ep.y += ep.vy; ep.life--;
-    if (ep.life <= 0 || ep.x < -40 || ep.x > W + 40 || ep.y < -40 || ep.y > H + 40) {
+    if (ep.life <= 0 || ep.x < game.camera.x - 40 || ep.x > game.camera.x + W + 40 ||
+        ep.y < game.camera.y - 40 || ep.y > game.camera.y + H + 40) {
       game.enemyProjectiles.splice(i, 1);
       continue;
     }
@@ -4080,7 +4082,7 @@ function resizeCanvas() {
   canvas.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   game._stars = null;   // regenerate starfield for the new dimensions
-  if (game.mode === 'explore' && game.state === 'playing') {
+  if (game.mode === 'explore') {
     game.mapW = W * 3; game.mapH = H * 3;
   } else {
     game.mapW = W; game.mapH = H;
