@@ -1399,14 +1399,14 @@ const POWERUP_KEYS = Object.keys(POWERUPS);
 // ─── LUMINA SHOP (meta-progression) ─── permanent upgrades bought with banked
 // lumina. Levels persist in localStorage; effects apply at the start of a run.
 const SHOP_ITEMS = [
-  { id: 'hp',      name: 'Lebenskern',   desc: '+25 Max-HP pro Stufe',           maxLvl: 5, base: 60 },
-  { id: 'dmg',     name: 'Glutkern',     desc: '+8% Schaden pro Stufe',          maxLvl: 5, base: 75 },
-  { id: 'speed',   name: 'Windschritt',  desc: '+5% Bewegungstempo pro Stufe',   maxLvl: 4, base: 68 },
-  { id: 'dashcd',  name: 'Phasenschritt',desc: 'Dash-Abklingzeit −12% pro Stufe',maxLvl: 3, base: 90 },
-  { id: 'lumina',  name: 'Lichtsog',     desc: '+15% Lumina-Ertrag pro Stufe',   maxLvl: 4, base: 53 },
-  { id: 'revive',  name: 'Zweites Licht',desc: 'Starte mit einer Wiederbelebung',maxLvl: 1, base: 330 },
+  { id: 'hp',      name: 'Lebenskern',   desc: '+25 Max-HP pro Stufe',           maxLvl: 5, base: 120 },
+  { id: 'dmg',     name: 'Glutkern',     desc: '+8% Schaden pro Stufe',          maxLvl: 5, base: 150 },
+  { id: 'speed',   name: 'Windschritt',  desc: '+5% Bewegungstempo pro Stufe',   maxLvl: 4, base: 135 },
+  { id: 'dashcd',  name: 'Phasenschritt',desc: 'Dash-Abklingzeit −12% pro Stufe',maxLvl: 3, base: 180 },
+  { id: 'lumina',  name: 'Lichtsog',     desc: '+15% Lumina-Ertrag pro Stufe',   maxLvl: 4, base: 105 },
+  { id: 'revive',  name: 'Zweites Licht',desc: 'Starte mit einer Wiederbelebung',maxLvl: 1, base: 660 },
 ];
-function shopCost(item, lvl) { return Math.round(item.base * Math.pow(1.8, lvl)); }
+function shopCost(item, lvl) { return Math.round(item.base * Math.pow(2.0, lvl)); }
 function getBank() { return parseInt(Store.get('ww_bank') || '0', 10) || 0; }
 function setBank(v) { Store.set('ww_bank', String(Math.max(0, Math.round(v)))); }
 function getShopLevels() { try { return JSON.parse(Store.get('ww_shop') || '{}') || {}; } catch (e) { return {}; } }
@@ -2598,8 +2598,8 @@ function update() {
       // Wave complete
       if (game.enemiesSpawned >= totalEnemies && game.enemies.length === 0 && !game.bossActive) {
         game.waveActive = false;
-        game.lumina += 5 + game.wave;
-        game.totalLumina += 5 + game.wave;
+        game.lumina += 3 + Math.floor(game.wave / 2);
+        game.totalLumina += 3 + Math.floor(game.wave / 2);
         game.screenFlash = 8;
         setTimeout(() => upgradeScreen(), 400);
       }
