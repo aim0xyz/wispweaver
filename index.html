@@ -1617,6 +1617,7 @@ function startGame() {
   game.waveActive = true;
   
   if (game.animFrame) cancelAnimationFrame(game.animFrame);
+  _lastFrame = 0; _stepAccum = 0;
   gameLoop();
 }
 
@@ -1950,19 +1951,31 @@ function closeLeaderboard() {
 }
 
 // ─── GAME LOOP ───
+// Logic runs at a fixed 60 Hz tick, decoupled from the display refresh rate so
+// movement feels equally direct on 30 / 60 / 120 Hz screens and never slows
+// down ("laggy") when the render framerate dips under load.
 let _stepAccum = 0;
-function gameLoop() {
-  // Game-speed multiplier (0.5x / 1x / 2x) via fixed-step accumulation.
+let _lastFrame = 0;
+const STEP_MS = 1000 / 60;               // one logical tick
+function gameLoop(ts) {
+  if (ts === undefined) ts = performance.now();
+  if (!_lastFrame) _lastFrame = ts;
+  let frameMs = ts - _lastFrame;
+  _lastFrame = ts;
+  if (frameMs > 250) frameMs = 250;      // clamp tab-switch / GC stalls
+
+  // Game-speed multiplier (0.5x / 1x / 2x) folds into the real-time step.
   if (game.state === 'playing') {
-    _stepAccum += (game.gameSpeed || 1);
+    _stepAccum += (frameMs / STEP_MS) * (game.gameSpeed || 1);
     let steps = 0;
-    while (_stepAccum >= 1 && steps < 4) {   // cap to avoid spiral-of-death
+    while (_stepAccum >= 1 && steps < 6) {   // cap to avoid spiral-of-death
       _stepAccum -= 1;
       steps++;
       if (game.hitStop > 0) { game.hitStop--; continue; }  // hit-stop freeze
       update();
       if (game.state !== 'playing') break;     // gameOver flipped state
     }
+    if (_stepAccum > 4) _stepAccum = 0;    // drop backlog instead of fast-forwarding
   } else {
     _stepAccum = 0;
   }
