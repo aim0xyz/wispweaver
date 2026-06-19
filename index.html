@@ -1318,6 +1318,10 @@ const DIFFICULTIES = {
   expert: { name:'Experte', enemyHp:1.7, enemyDmg:2,    enemySpeed:1.25, count:1.6,  playerHp:0.7, desc:'Nur für Meister-Weber. Ein Treffer tut richtig weh.' },
 };
 function diffMods() { return DIFFICULTIES[game.difficulty] || DIFFICULTIES.normal; }
+
+// Unified hostile colour for ALL enemy projectiles — a crimson that stays
+// distinct from every player colour (orange / cyan / purple / green).
+const ENEMY_SHOT = { color: '#ff2e4d', glow: '#ff0033', core: '#ffc0cb' };
 function setDifficulty(d) {
   if (!DIFFICULTIES[d]) return;
   game.difficulty = d;
@@ -2364,9 +2368,9 @@ function update() {
         game.enemyProjectiles.push({
           x: e.x, y: e.y,
           vx: Math.cos(angleToPlayer) * spd, vy: Math.sin(angleToPlayer) * spd,
-          radius: 6, damage: e.damage, life: 180, color: '#66aaff', glow: '#3366cc',
+          radius: 6, damage: e.damage, life: 180, color: ENEMY_SHOT.color, glow: ENEMY_SHOT.glow,
         });
-        spawnShockwave(e.x, e.y, '#66aaff', e.radius + 14, 12, 2);
+        spawnShockwave(e.x, e.y, ENEMY_SHOT.color, e.radius + 14, 12, 2);
       }
     } else if (e.type === 'boss') {
       // The boss does NOT relentlessly chase. It only drifts slowly toward the
@@ -2440,10 +2444,10 @@ function update() {
             x: e.x, y: e.y,
             vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
             radius: 7, damage: Math.round(e.damage * 0.55),
-            life: 200, color: '#ff3366', glow: '#ff0044',
+            life: 200, color: ENEMY_SHOT.color, glow: ENEMY_SHOT.glow,
           });
         }
-        spawnShockwave(e.x, e.y, '#ff3366', e.radius + 24, 16, 3);
+        spawnShockwave(e.x, e.y, ENEMY_SHOT.color, e.radius + 24, 16, 3);
         sfx('hit');
       }
     }
@@ -3131,14 +3135,15 @@ function render() {
     ctx.restore();
   }
 
-  // Enemy projectiles (boss volleys)
+  // Enemy projectiles — hostile crimson with a red (not white) core, so they
+  // never read as the player's own shots.
   for (const ep of game.enemyProjectiles) {
     ctx.save();
-    ctx.shadowColor = ep.glow; ctx.shadowBlur = 14;
+    ctx.shadowColor = ep.glow; ctx.shadowBlur = 16;
     ctx.fillStyle = ep.color;
     ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius, 0, Math.PI * 2); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.6;
+    ctx.fillStyle = ENEMY_SHOT.core; ctx.globalAlpha = 0.85;
     ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 0.4, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
