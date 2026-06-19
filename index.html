@@ -1462,6 +1462,18 @@ class Enemy {
         this.spawnTimer = 120;
         this.spawnRate = Math.max(60, 180 - wave * 5);
         break;
+      case 'caster':
+        this.radius = 13;
+        this.hp = 22 + wave * 3;
+        this.maxHp = this.hp;
+        this.speed = 1.0 + wave * 0.03;
+        this.damage = 7 + Math.floor(wave * 0.4);
+        this.color = '#3366cc';
+        this.glow = '#2244aa';
+        this.score = 20;
+        this.castCooldown = 60 + Math.floor(Math.random() * 40);
+        this.preferredDist = 230;   // tries to hold this range and shoot
+        break;
       case 'boss':
         this.radius = 32;
         this.hp = 200 + wave * 40;
@@ -2206,10 +2218,12 @@ function update() {
         if (game.spawnTimer <= 0) {
           const types = ['gloomling'];
           if (game.wave >= 3) types.push('runner');
+          if (game.wave >= 4) types.push('caster');
           if (game.wave >= 5) types.push('blight');
           if (game.wave >= 4 && Math.random() < 0.12) types.push('spawner');
           // More variety at higher waves
           if (game.wave >= 6 && Math.random() < 0.3) types.push('runner');
+          if (game.wave >= 7 && Math.random() < 0.25) types.push('caster');
           if (game.wave >= 8 && Math.random() < 0.1) types.push('blight');
           const type = types[Math.floor(Math.random() * types.length)];
           spawnEnemy(type);
@@ -2241,7 +2255,30 @@ function update() {
     
     // A charging boss commits to its locked dash — no homing correction.
     const bossCharging = e.type === 'boss' && e.chargeFlash > 5;
-    if ((e.type !== 'spawner' || game.enemies.length < 20) && !bossCharging) {
+    if (e.type === 'caster') {
+      // Kiter: hold a preferred range, strafe, and fire dodgeable bolts.
+      if (dToPlayer < e.preferredDist - 30) {
+        e.x -= Math.cos(angleToPlayer) * e.speed;        // back away
+        e.y -= Math.sin(angleToPlayer) * e.speed;
+      } else if (dToPlayer > e.preferredDist + 30) {
+        e.x += Math.cos(angleToPlayer) * e.speed;        // close in
+        e.y += Math.sin(angleToPlayer) * e.speed;
+      } else {
+        e.x += Math.cos(angleToPlayer + Math.PI / 2) * e.speed * 0.6;  // strafe
+        e.y += Math.sin(angleToPlayer + Math.PI / 2) * e.speed * 0.6;
+      }
+      e.castCooldown--;
+      if (e.castCooldown <= 0 && dToPlayer < 460) {
+        e.castCooldown = 95 + Math.floor(Math.random() * 50);
+        const spd = 3.6;
+        game.enemyProjectiles.push({
+          x: e.x, y: e.y,
+          vx: Math.cos(angleToPlayer) * spd, vy: Math.sin(angleToPlayer) * spd,
+          radius: 6, damage: e.damage, life: 180, color: '#66aaff', glow: '#3366cc',
+        });
+        spawnShockwave(e.x, e.y, '#66aaff', e.radius + 14, 12, 2);
+      }
+    } else if ((e.type !== 'spawner' || game.enemies.length < 20) && !bossCharging) {
       if (dToPlayer > e.radius + p.radius) {
         e.x += Math.cos(angleToPlayer) * e.speed;
         e.y += Math.sin(angleToPlayer) * e.speed;
@@ -2683,6 +2720,33 @@ function drawEnemyBody(e, faceA) {
     ctx.strokeStyle = e.glow; ctx.globalAlpha = 0.5; ctx.lineWidth = 1.5;
     blobPath(e.x, e.y, e.radius * pulse, 4, 0.07, t * 0.6, e.seed); ctx.stroke();
     ctx.globalAlpha = 1;
+    return;
+  }
+
+  if (e.type === 'caster') {
+    // Floating crystal that brightens as its bolt is about to fire.
+    const charging = e.castCooldown < 22;
+    const pulse = charging ? 1 + (22 - e.castCooldown) / 22 * 0.25 : 1;
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(t * 0.5 + e.seed);
+    const r = e.radius * pulse;
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(0, -r * 1.3); ctx.lineTo(r, 0); ctx.lineTo(0, r * 1.3); ctx.lineTo(-r, 0);
+    ctx.closePath(); ctx.fill();
+    // inner core glows blue → white when charging
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = flash ? '#fff' : (charging ? '#cfe6ff' : '#88bbff');
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.42, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // telegraph ring while charging
+    if (charging) {
+      ctx.strokeStyle = `rgba(150,200,255,${(22 - e.castCooldown) / 22 * 0.6})`;
+      ctx.lineWidth = 2; ctx.shadowColor = '#66aaff'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + 8, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
     return;
   }
 
