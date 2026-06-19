@@ -1770,8 +1770,8 @@ class Enemy {
       if (Math.abs(this.knockbackX) < 0.1) this.knockbackX = 0;
       if (Math.abs(this.knockbackY) < 0.1) this.knockbackY = 0;
     }
-    this.x = Math.max(this.radius, Math.min(W - this.radius, this.x));
-    this.y = Math.max(this.radius, Math.min(H - this.radius, this.y));
+    this.x = Math.max(this.radius, Math.min(game.mapW - this.radius, this.x));
+    this.y = Math.max(this.radius, Math.min(game.mapH - this.radius, this.y));
   }
 }
 
@@ -2900,9 +2900,11 @@ function update() {
         game.screenFlash = 4;
         game.hitStop = 3;
         sfx('hurt');
-        const a = Math.atan2(e.y - p.y, e.x - p.x);
+        const a = Math.atan2(p.y - e.y, p.x - e.x);
         p.x += Math.cos(a) * 20;
         p.y += Math.sin(a) * 20;
+        p.x = Math.max(p.radius, Math.min(game.mapW - p.radius, p.x));
+        p.y = Math.max(p.radius, Math.min(game.mapH - p.radius, p.y));
         spawnParticles(p.x, p.y, '#ff4444', 20, 4, 20, 3);
         
         // Damage text
