@@ -656,6 +656,28 @@
     color: #aaffdd;
     box-shadow: 0 0 14px rgba(136,255,204,0.35);
   }
+  #autoMenu {
+    position: absolute; top: 52px; right: 12px; z-index: 40;
+    background: rgba(18,16,38,0.97);
+    border: 1px solid rgba(136,255,204,0.25);
+    border-radius: 12px; padding: 6px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+    display: none; flex-direction: column; gap: 3px; min-width: 168px;
+  }
+  #autoMenu.open { display: flex; }
+  #autoMenu .auto-opt {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 11px; border-radius: 8px; cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.7); transition: all 0.15s; border: 1px solid transparent;
+  }
+  #autoMenu .auto-opt:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  #autoMenu .auto-opt .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.35); flex: 0 0 auto;
+  }
+  #autoMenu .auto-opt.sel { background: rgba(136,255,204,0.12); border-color: rgba(136,255,204,0.4); color: #aaffdd; }
+  #autoMenu .auto-opt.sel .dot { background: #aaffdd; border-color: #aaffdd; box-shadow: 0 0 8px rgba(136,255,204,0.6); }
   /* keep wave/lumina clear of the top-right control buttons */
   #hud .right-stats { padding-right: 156px; }
   #buildTag {
@@ -698,7 +720,13 @@
   <canvas id="gameCanvas" width="800" height="600"></canvas>
 
   <!-- Speed + Mute controls -->
-  <button id="autoBtn" onclick="toggleAuto()" title="Autopilot — the wisp plays itself (P)" aria-label="Toggle autopilot">AUTO</button>
+  <button id="autoBtn" onclick="toggleAutoMenu()" title="Autopilot mode (P)" aria-label="Autopilot mode">AUTO</button>
+  <div id="autoMenu">
+    <div class="auto-opt" data-mode="off"   onclick="setAutoMode('off')"><span class="dot"></span>Aus</div>
+    <div class="auto-opt" data-mode="steer" onclick="setAutoMode('steer')"><span class="dot"></span>Nur Auto-Steuern</div>
+    <div class="auto-opt" data-mode="pick"  onclick="setAutoMode('pick')"><span class="dot"></span>Nur Auto-Pick</div>
+    <div class="auto-opt" data-mode="both"  onclick="setAutoMode('both')"><span class="dot"></span>Beides</div>
+  </div>
   <button id="speedBtn" onclick="cycleSpeed()" title="Game speed (0.5x / 1x / 2x)" aria-label="Game speed">1×</button>
   <button id="muteBtn" onclick="toggleMute()" title="Sound on/off" aria-label="Toggle sound"></button>
 
@@ -1336,7 +1364,7 @@ let game = {
   screenFlash: 0,
   hitStop: 0,
   gameSpeed: 1,
-  autoPlay: false,
+  autoMode: 'off',   // 'off' | 'steer' | 'pick' | 'both'
   difficulty: 'normal',
   touchActive: false,
   moveX: 0, moveY: 0,
@@ -1917,7 +1945,7 @@ function upgradeScreen() {
   });
 
   // Autopilot resolves the pick itself after a brief beat so it stays visible.
-  if (game.autoPlay) setTimeout(() => { if (game.state === 'upgrade') autoPickUpgrade(); }, 650);
+  if (autoPickOn()) setTimeout(() => { if (game.state === 'upgrade') autoPickUpgrade(); }, 650);
 }
 
 function nextWave() {
@@ -2148,7 +2176,7 @@ function update() {
     if (game.keys['d'] || game.keys['arrowright']) dx = 1;
   }
   // Autopilot — drives the wisp only when the player gives no manual input.
-  if (game.autoPlay && dx === 0 && dy === 0 && !game.touchActive) {
+  if (autoSteerOn() && dx === 0 && dy === 0 && !game.touchActive) {
     const v = computeAutoMove(p, stats);
     dx = v.x; dy = v.y;
   }
@@ -3335,7 +3363,7 @@ document.addEventListener('keydown', e => {
   game.keys[key] = true;
   
   // Toggle autopilot with P (but not while typing in a field)
-  if (key === 'p' && document.activeElement?.tagName !== 'INPUT') toggleAuto();
+  if (key === 'p' && document.activeElement?.tagName !== 'INPUT') cycleAutoMode();
 
   // Menu keyboard shortcuts
   if (e.key === 'Enter') {
@@ -3467,19 +3495,46 @@ const AUTO_UPGRADE_PRIORITY = [
   'max_hp', 'regen', 'move_speed', 'magnet', 'longer_trail', 'wider_trail'
 ];
 
+const AUTO_LABELS = { off:'Aus', steer:'Auto-Steuern', pick:'Auto-Pick', both:'Beides' };
+function autoSteerOn() { return game.autoMode === 'steer' || game.autoMode === 'both'; }
+function autoPickOn()  { return game.autoMode === 'pick'  || game.autoMode === 'both'; }
+
 function updateAutoBtn() {
   const b = document.getElementById('autoBtn');
-  if (b) b.classList.toggle('active', !!game.autoPlay);
+  if (b) b.classList.toggle('active', game.autoMode !== 'off');
+  document.querySelectorAll('#autoMenu .auto-opt').forEach(o =>
+    o.classList.toggle('sel', o.dataset.mode === game.autoMode));
 }
-function toggleAuto() {
-  game.autoPlay = !game.autoPlay;
-  Store.set('ww_auto', game.autoPlay ? '1' : '0');
+function toggleAutoMenu() {
+  const m = document.getElementById('autoMenu');
+  if (m) m.classList.toggle('open');
+  Sound.resume();
+}
+function setAutoMode(mode) {
+  if (!AUTO_LABELS[mode]) return;
+  game.autoMode = mode;
+  Store.set('ww_automode', mode);
   updateAutoBtn();
+  const m = document.getElementById('autoMenu');
+  if (m) m.classList.remove('open');
   Sound.resume(); sfx('hit');
-  toast(game.autoPlay ? 'Autopilot ON — the wisp weaves itself' : 'Autopilot OFF');
-  // If switched on while a pick is waiting, resolve it now.
-  if (game.autoPlay && game.state === 'upgrade') autoPickUpgrade();
+  toast(mode === 'off' ? 'Autopilot aus' : 'Autopilot: ' + AUTO_LABELS[mode]);
+  // If auto-pick just turned on while a pick is waiting, resolve it now.
+  if (autoPickOn() && game.state === 'upgrade') autoPickUpgrade();
 }
+// Keyboard "P" cycles through the modes.
+function cycleAutoMode() {
+  const order = ['off', 'steer', 'pick', 'both'];
+  setAutoMode(order[(order.indexOf(game.autoMode) + 1) % order.length]);
+}
+// Close the autopilot menu when clicking anywhere else.
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('autoMenu');
+  const btn = document.getElementById('autoBtn');
+  if (menu && menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn) {
+    menu.classList.remove('open');
+  }
+});
 
 // Steering for the bot: flee danger, grab lumina when safe, hug away from walls.
 function computeAutoMove(p, stats) {
@@ -3566,7 +3621,9 @@ function autoPickUpgrade() {
 try {
   const savedSpeed = parseFloat(Store.get('ww_speed'));
   if (SPEEDS.includes(savedSpeed)) game.gameSpeed = savedSpeed;
-  game.autoPlay = Store.get('ww_auto') === '1';
+  const savedAuto = Store.get('ww_automode');
+  if (AUTO_LABELS[savedAuto]) game.autoMode = savedAuto;
+  else if (Store.get('ww_auto') === '1') game.autoMode = 'both';   // migrate old on/off setting
   const savedDiff = Store.get('ww_diff');
   if (DIFFICULTIES[savedDiff]) game.difficulty = savedDiff;
   resizeCanvas();
