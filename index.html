@@ -678,6 +678,19 @@
   }
   #autoMenu .auto-opt.sel { background: rgba(136,255,204,0.12); border-color: rgba(136,255,204,0.4); color: #aaffdd; }
   #autoMenu .auto-opt.sel .dot { background: #aaffdd; border-color: #aaffdd; box-shadow: 0 0 8px rgba(136,255,204,0.6); }
+  #dashBtn {
+    position: absolute; bottom: 26px; right: 22px; z-index: 30;
+    width: 68px; height: 68px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, rgba(120,200,255,0.22), rgba(40,80,160,0.18));
+    border: 1.5px solid rgba(150,210,255,0.45);
+    color: #cfe9ff; font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 800; letter-spacing: 1px;
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer; transition: opacity 0.12s, transform 0.1s;
+    box-shadow: 0 0 18px rgba(90,160,255,0.25); user-select: none; -webkit-user-select: none;
+    touch-action: none;
+  }
+  #dashBtn:active { transform: scale(0.92); }
   /* keep wave/lumina clear of the top-right control buttons */
   #hud .right-stats { padding-right: 156px; }
   #buildTag {
@@ -729,6 +742,7 @@
   </div>
   <button id="speedBtn" onclick="cycleSpeed()" title="Game speed (0.5x / 1x / 2x)" aria-label="Game speed">1×</button>
   <button id="muteBtn" onclick="toggleMute()" title="Sound on/off" aria-label="Toggle sound"></button>
+  <button id="dashBtn" aria-label="Dash">DASH</button>
 
   <!-- Toast -->
   <div id="toast"></div>
@@ -993,6 +1007,7 @@ const Sound = (() => {
     wave:     () => { tone(330, 0.28, 'sine', 0.11, 495); tone(165, 0.4, 'sine', 0.07, 247); },
     boss:     () => { tone(110, 0.6, 'sawtooth', 0.2, 55); tone(70, 0.85, 'sine', 0.16, 40); noise(0.4, 0.18, 600); },
     combo:    () => tone(880, 0.1, 'triangle', 0.09, 1320),
+    dash:     () => { tone(720, 0.14, 'sine', 0.1, 180); noise(0.1, 0.07, 1200); },
     gameover: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.42, 'triangle', 0.15, f * 0.6, i * 0.14)),
     best:     () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.26, 'triangle', 0.14, null, i * 0.08)),
   };
@@ -1322,6 +1337,11 @@ function diffMods() { return DIFFICULTIES[game.difficulty] || DIFFICULTIES.norma
 // Unified hostile colour for ALL enemy projectiles — a crimson that stays
 // distinct from every player colour (orange / cyan / purple / green).
 const ENEMY_SHOT = { color: '#ff2e4d', glow: '#ff0033', core: '#ffc0cb' };
+
+// ─── DASH ─── quick burst-dodge with brief invincibility.
+const DASH_SPEED = 12;      // px per tick while dashing
+const DASH_DURATION = 10;   // ticks the dash lasts
+const DASH_COOLDOWN = 78;   // ticks before it's ready again (~1.3s)
 function setDifficulty(d) {
   if (!DIFFICULTIES[d]) return;
   game.difficulty = d;
@@ -1462,6 +1482,9 @@ class Player {
     this.angle = 0;
     this.burnAura = 0;
     this.attackPulse = 0;
+    this.dashCooldown = 0;
+    this.dashTimer = 0;
+    this.dashDirX = 0; this.dashDirY = 0;
     this.echoTimer = 0;
     
     // Apply character base bonuses
@@ -1743,6 +1766,7 @@ function startGame() {
   game.state = 'playing';
   
   document.getElementById('hud').style.display = 'flex';
+  document.getElementById('dashBtn').style.display = 'flex';
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('leaderboard-screen').classList.add('hidden');
   document.getElementById('upgrade-screen').classList.add('hidden');
@@ -2016,6 +2040,7 @@ function gameOver() {
 
   document.getElementById('gameover-screen').classList.remove('hidden');
   document.getElementById('hud').style.display = 'none';
+  document.getElementById('dashBtn').style.display = 'none';
 
   sfx('gameover');
   if (isBest && game.score > 0) setTimeout(() => sfx('best'), 700);
@@ -2031,6 +2056,7 @@ function backToMenu() {
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('leaderboard-screen').classList.add('hidden');
   document.getElementById('hud').style.display = 'none';
+  document.getElementById('dashBtn').style.display = 'none';
   document.getElementById('menu-screen').classList.remove('hidden');
   updateMenuBest();
   if (game.animFrame) cancelAnimationFrame(game.animFrame);
@@ -2155,7 +2181,9 @@ function update() {
   document.getElementById('luminaCount').textContent = game.lumina;
   const charData = CHARACTERS.find(c => c.id === p.charId);
   document.getElementById('charName').textContent = charData ? charData.name : '';
-  
+  const dashBtn = document.getElementById('dashBtn');
+  if (dashBtn) dashBtn.style.opacity = p.dashCooldown > 0 ? 0.35 : 1;
+
   // Combo display with animation
   const comboEl = document.getElementById('comboDisplay');
   const comboCountEl = document.getElementById('comboCount');
@@ -2190,12 +2218,40 @@ function update() {
   if (mag > 1) { dx /= mag; dy /= mag; mag = 1; }   // cap (normalises diagonals too)
   game.isMoving = mag > 0.05;
 
-  p.x += dx * stats.speed;
-  p.y += dy * stats.speed;
+  // ─── DASH ───
+  if (p.dashCooldown > 0) p.dashCooldown--;
+  if (game._dashRequested) {
+    game._dashRequested = false;
+    if (p.dashCooldown <= 0 && p.dashTimer <= 0) {
+      let ddx = dx, ddy = dy;
+      if (Math.hypot(ddx, ddy) < 0.1) { ddx = Math.cos(p.angle); ddy = Math.sin(p.angle); }
+      const dm = Math.hypot(ddx, ddy) || 1;
+      p.dashDirX = ddx / dm; p.dashDirY = ddy / dm;
+      p.dashTimer = DASH_DURATION;
+      p.dashCooldown = DASH_COOLDOWN;
+      p.invincible = Math.max(p.invincible, DASH_DURATION + 5);   // i-frames
+      p.angle = Math.atan2(p.dashDirY, p.dashDirX);
+      sfx('dash');
+      spawnShockwave(p.x, p.y, p.color, 46, 16, 4);
+      spawnParticles(p.x, p.y, p.glow, 16, 5, 18, 3);
+    }
+  }
+
+  if (p.dashTimer > 0) {
+    // Dashing: committed burst along the locked direction.
+    p.dashTimer--;
+    p.x += p.dashDirX * DASH_SPEED;
+    p.y += p.dashDirY * DASH_SPEED;
+    game.isMoving = true;
+    game.trail.push({x: p.x, y: p.y, life: stats.trailDuration});
+    spawnParticles(p.x, p.y, p.color, 2, 1.5, 12, 2.5);
+  } else {
+    p.x += dx * stats.speed;
+    p.y += dy * stats.speed;
+    if (game.isMoving) p.angle = Math.atan2(dy, dx);
+  }
   p.x = Math.max(p.radius, Math.min(W - p.radius, p.x));
   p.y = Math.max(p.radius, Math.min(H - p.radius, p.y));
-
-  if (game.isMoving) p.angle = Math.atan2(dy, dx);
 
   // Attack pulse decay
   if (p.attackPulse > 0) p.attackPulse--;
@@ -3193,6 +3249,25 @@ function render() {
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   
+  // Dash cooldown ring under the wisp — fills back up as the dash recharges.
+  if (p.dashCooldown > 0) {
+    const frac = 1 - p.dashCooldown / DASH_COOLDOWN;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(150,210,255,0.5)';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius + 9, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    // Ready: a faint full ring pulse.
+    ctx.save();
+    ctx.strokeStyle = `rgba(150,210,255,${0.12 + 0.08 * Math.sin(game.gameTime * 0.1)})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius + 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
   // Player glow aura
   ctx.save();
   const auraRadius = 32 + Math.sin(game.gameTime * 0.05) * 4;
@@ -3372,6 +3447,12 @@ document.addEventListener('keydown', e => {
   // Toggle autopilot with P (but not while typing in a field)
   if (key === 'p' && document.activeElement?.tagName !== 'INPUT') cycleAutoMode();
 
+  // Dash with Space or Shift
+  if ((key === ' ' || key === 'spacebar' || key === 'shift') && game.state === 'playing') {
+    e.preventDefault();
+    game._dashRequested = true;
+  }
+
   // Menu keyboard shortcuts
   if (e.key === 'Enter') {
     if (game.state === 'menu') startSelect();
@@ -3388,6 +3469,15 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => {
   game.keys[e.key.toLowerCase()] = false;
 });
+
+// Dash button (touch + mouse) — separate from the joystick canvas.
+(function(){
+  const db = document.getElementById('dashBtn');
+  if (!db) return;
+  const fire = (e) => { e.preventDefault(); e.stopPropagation(); if (game.state === 'playing') { game._dashRequested = true; Sound.resume(); } };
+  db.addEventListener('touchstart', fire, { passive: false });
+  db.addEventListener('mousedown', fire);
+})();
 
 function canvasPos(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
