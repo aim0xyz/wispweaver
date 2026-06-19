@@ -156,6 +156,27 @@
     gap: 12px;
     margin-bottom: 20px;
   }
+  .diff-select {
+    display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .diff-btn {
+    padding: 8px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.55);
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.5px; cursor: pointer; transition: all 0.18s;
+  }
+  .diff-btn:hover { background: rgba(255,255,255,0.1); color: #fff; transform: translateY(-1px); }
+  .diff-btn.active {
+    background: linear-gradient(135deg, rgba(255,180,80,0.28), rgba(255,120,40,0.28));
+    border-color: rgba(255,180,80,0.65); color: #ffd9a8;
+    box-shadow: 0 0 14px rgba(255,160,60,0.3);
+  }
+  .diff-desc {
+    font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px;
+    margin-bottom: 22px; min-height: 16px; text-align: center;
+  }
   .char-card {
     width: 150px;
     padding: 18px 12px 14px;
@@ -745,6 +766,13 @@
     <h2>Choose your Wisp</h2>
     <div class="hint">Each wisp weaves light differently</div>
     <div class="char-grid" id="charGrid"></div>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn" data-diff="easy"   onclick="setDifficulty('easy')">Leicht</button>
+      <button class="diff-btn" data-diff="normal" onclick="setDifficulty('normal')">Normal</button>
+      <button class="diff-btn" data-diff="hard"   onclick="setDifficulty('hard')">Schwer</button>
+      <button class="diff-btn" data-diff="expert" onclick="setDifficulty('expert')">Experte</button>
+    </div>
+    <div class="diff-desc" id="diffDesc"></div>
     <button class="btn btn-primary" id="selectConfirm" disabled onclick="confirmSelect()">
       <svg viewBox="0 0 20 20" width="18" height="18" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
         <circle cx="10" cy="10" r="8"/>
@@ -1253,6 +1281,29 @@ const ALL_UPGRADES = [
   { id:'chain',       icon:'chain',       name:'Chain Ember',   desc:'Attacks chain to 1 extra enemy',      maxLvl:3, color:'#ff8844' },
 ];
 
+// ─── DIFFICULTY ───
+// Multipliers applied to enemy stats, spawn counts and the player's HP.
+const DIFFICULTIES = {
+  easy:   { name:'Leicht',  enemyHp:0.7, enemyDmg:0.5,  enemySpeed:0.9,  count:0.8,  playerHp:1.4, desc:'Mehr HP, schwächere Gegner — entspanntes Weben.' },
+  normal: { name:'Normal',  enemyHp:1,   enemyDmg:1,    enemySpeed:1,    count:1,    playerHp:1,   desc:'Die ausgewogene Herausforderung.' },
+  hard:   { name:'Schwer',  enemyHp:1.35,enemyDmg:1.45, enemySpeed:1.12, count:1.3,  playerHp:0.85,desc:'Zähere, gefährlichere Gegner und mehr davon.' },
+  expert: { name:'Experte', enemyHp:1.7, enemyDmg:2,    enemySpeed:1.25, count:1.6,  playerHp:0.7, desc:'Nur für Meister-Weber. Ein Treffer tut richtig weh.' },
+};
+function diffMods() { return DIFFICULTIES[game.difficulty] || DIFFICULTIES.normal; }
+function setDifficulty(d) {
+  if (!DIFFICULTIES[d]) return;
+  game.difficulty = d;
+  try { Store.set('ww_diff', d); } catch (e) {}
+  updateDiffButtons();
+  try { Sound.resume(); sfx('hit'); } catch (e) {}
+}
+function updateDiffButtons() {
+  document.querySelectorAll('.diff-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.diff === game.difficulty));
+  const desc = document.getElementById('diffDesc');
+  if (desc) desc.textContent = diffMods().desc;
+}
+
 // ─── GAME STATE ───
 let game = {
   state: 'menu',
@@ -1286,6 +1337,7 @@ let game = {
   hitStop: 0,
   gameSpeed: 1,
   autoPlay: false,
+  difficulty: 'normal',
   touchActive: false,
   moveX: 0, moveY: 0,
   joyOrigin: null, joyKnob: null,
@@ -1388,6 +1440,10 @@ class Player {
       if (ch.bonus.attackRate) this.attackRate += ch.bonus.attackRate;
       if (ch.bonus.projectiles) this.projectiles += ch.bonus.projectiles;
     }
+
+    // Difficulty: scale the player's starting/max HP.
+    this.maxHp = Math.round(this.maxHp * diffMods().playerHp);
+    this.hp = this.maxHp;
   }
 
   getStats() {
@@ -1489,6 +1545,13 @@ class Enemy {
         this.chargeAngle = 0;       // direction locked in when the charge telegraphs
         break;
     }
+
+    // Difficulty: scale enemy HP, damage and speed.
+    const dm = diffMods();
+    this.hp = Math.max(1, Math.round(this.hp * dm.enemyHp));
+    this.maxHp = this.hp;
+    this.damage = Math.max(1, Math.round(this.damage * dm.enemyDmg));
+    this.speed *= dm.enemySpeed;
   }
 
   takeDamage(amount) {
@@ -1585,6 +1648,7 @@ function startSelect() {
 }
 
 function renderCharSelect() {
+  updateDiffButtons();
   const grid = document.getElementById('charGrid');
   grid.innerHTML = '';
   CHARACTERS.forEach((ch, i) => {
@@ -1734,8 +1798,8 @@ function spawnLumina(x, y, count) {
 }
 
 function getEnemyCountForWave(wave) {
-  if (wave % 5 === 0) return 6 + wave;
-  return 8 + wave * 2;
+  const base = (wave % 5 === 0) ? 6 + wave : 8 + wave * 2;
+  return Math.max(3, Math.round(base * diffMods().count));
 }
 
 // Directional spread: shot 1 = forward, 2 = back, 3 = left, 4 = right,
@@ -3475,10 +3539,13 @@ try {
   const savedSpeed = parseFloat(Store.get('ww_speed'));
   if (SPEEDS.includes(savedSpeed)) game.gameSpeed = savedSpeed;
   game.autoPlay = Store.get('ww_auto') === '1';
+  const savedDiff = Store.get('ww_diff');
+  if (DIFFICULTIES[savedDiff]) game.difficulty = savedDiff;
   resizeCanvas();
   updateMuteIcon();
   updateSpeedBtn();
   updateAutoBtn();
+  updateDiffButtons();
   updateMenuBest();
   const bt = document.getElementById('buildTag');
   if (bt && !bt.textContent) bt.textContent = BUILD;
