@@ -1295,7 +1295,7 @@ const CHARACTERS = [
 
 // ─── UPGRADES ───
 const ALL_UPGRADES = [
-  { id:'wider_arc',   icon:'burst',       name:'Radiant Bolts', desc:'Light bolts are 25% larger',          maxLvl:3, color:'#66ddff' },
+  { id:'range',       icon:'wave',        name:'Reaching Light',desc:'Attacks reach 30% farther',           maxLvl:3, color:'#66ddff' },
   { id:'faster_atk',  icon:'bolt',        name:'Quick Flame',   desc:'Attack 20% faster',                  maxLvl:4, color:'#ffdd44' },
   { id:'more_dmg',    icon:'burst',       name:'Bright Ember',  desc:'Damage +25%',                         maxLvl:5, color:'#ff8844' },
   { id:'extra_shot',  icon:'fork',        name:'Forked Light',  desc:'+1 projectile per attack',            maxLvl:3, color:'#ffaa66' },
@@ -1483,7 +1483,8 @@ class Player {
     return {
       speed: this.speed * (1 + 0.15 * (u.move_speed || 0)),
       attackRate: Math.max(6, this.attackRate - 3 * (u.faster_atk || 0)),
-      attackArc: this.attackArc * (1 + 0.35 * (u.wider_arc || 0)),
+      attackArc: this.attackArc,
+      range: 1 + 0.3 * (u.range || 0),
       damage: this.damage * (1 + 0.25 * (u.more_dmg || 0)),
       projectiles: this.projectiles + (u.extra_shot || 0),
       trailDuration: this.trailDuration * (1 + 0.4 * (u.longer_trail || 0)),
@@ -1854,11 +1855,12 @@ function playerAttack() {
   const stats = p.getStats();
   sfx('shoot');
 
+  const targetRange = 350 * stats.range;
   let nearest = null;
   let nearDist = Infinity;
   for (const e of game.enemies) {
     const d = dist(p.x, p.y, e.x, e.y);
-    if (d < nearDist && d < 350) { nearDist = d; nearest = e; }
+    if (d < nearDist && d < targetRange) { nearDist = d; nearest = e; }
   }
 
   // Primary direction: aim at the nearest enemy, else along facing / input.
@@ -1875,13 +1877,13 @@ function playerAttack() {
 
   const count = stats.projectiles;
   const offsets = getSpreadOffsets(count);
-  const projRadius = 5 * (1 + 0.25 * (game.upgradeLevels.wider_arc || 0));
+  const projLife = Math.round(80 * stats.range);   // travel distance scales with range
 
   // First offset (0) always fires straight at the target — the rest fan out.
   for (const offset of offsets) {
     const angle = baseAngle + offset;
     const proj = new Projectile(p.x, p.y, angle, 7, stats.damage, true, p.color, p.glow, stats.chain);
-    proj.radius = projRadius;
+    proj.life = projLife;
     game.projectiles.push(proj);
   }
 
@@ -2645,7 +2647,7 @@ function killEnemy(e) {
   if (p && !e._killPending) {
     // Prism: Shatter — 50% damage to nearby enemies (no recursion, queue removal)
     if (p.charId === 'prism') {
-      const radius = 60 + (game.upgradeLevels.wider_arc || 0) * 10;
+      const radius = 60 + (game.upgradeLevels.range || 0) * 10;
       const dmg = Math.round(p.getStats().damage * 0.5);
       for (const other of game.enemies) {
         if (other === e) continue;
@@ -3496,7 +3498,7 @@ function cycleSpeed() {
 // ─── AUTOPILOT ───
 // Priority for auto-picking upgrades (highest first). Offence > sustain > utility.
 const AUTO_UPGRADE_PRIORITY = [
-  'more_dmg', 'faster_atk', 'extra_shot', 'wider_arc', 'chain', 'explode_kill',
+  'more_dmg', 'faster_atk', 'extra_shot', 'range', 'chain', 'explode_kill',
   'max_hp', 'regen', 'move_speed', 'magnet', 'longer_trail', 'wider_trail'
 ];
 
