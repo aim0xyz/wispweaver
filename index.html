@@ -1342,6 +1342,16 @@ const ENEMY_SHOT = { color: '#ff2e4d', glow: '#ff0033', core: '#ffc0cb' };
 const DASH_SPEED = 12;      // px per tick while dashing
 const DASH_DURATION = 10;   // ticks the dash lasts
 const DASH_COOLDOWN = 78;   // ticks before it's ready again (~1.3s)
+
+// ─── POWER-UPS ─── rare drops from enemies. `timed` (frames) = buff duration,
+// 0 = instant effect. `letter` is the glyph drawn on the pickup.
+const POWERUPS = {
+  rapid:  { name: 'Rapid Fire', color: '#ffdd44', glow: '#ffaa00', timed: 300, letter: '»' },
+  shield: { name: 'Aegis',      color: '#66ddff', glow: '#3399ff', timed: 360, letter: '◌' },
+  nova:   { name: 'Nova',       color: '#ff8822', glow: '#ff4400', timed: 0,   letter: '✺' },
+  mend:   { name: 'Mend',       color: '#ff5577', glow: '#ff2255', timed: 0,   letter: '✚' },
+};
+const POWERUP_KEYS = Object.keys(POWERUPS);
 function setDifficulty(d) {
   if (!DIFFICULTIES[d]) return;
   game.difficulty = d;
@@ -1369,6 +1379,8 @@ let game = {
   enemies: [],
   projectiles: [],
   enemyProjectiles: [],
+  powerups: [],
+  activePowerups: {},
   particles: [],
   shockwaves: [],
   damageTexts: [],
@@ -1505,7 +1517,7 @@ class Player {
     const u = game.upgradeLevels;
     return {
       speed: this.speed * (1 + 0.15 * (u.move_speed || 0)),
-      attackRate: Math.max(6, this.attackRate - 3 * (u.faster_atk || 0)),
+      attackRate: Math.max(4, (this.attackRate - 3 * (u.faster_atk || 0)) * (game.activePowerups.rapid > 0 ? 0.45 : 1)),
       attackArc: this.attackArc,
       range: 1 + 0.3 * (u.range || 0),
       damage: this.damage * (1 + 0.25 * (u.more_dmg || 0)),
@@ -1742,6 +1754,8 @@ function startGame() {
   game.enemies = [];
   game.projectiles = [];
   game.enemyProjectiles = [];
+  game.powerups = [];
+  game.activePowerups = {};
   game.particles = [];
   game.shockwaves = [];
   game.trail = [];
@@ -1844,6 +1858,45 @@ function spawnShockwave(x, y, color, maxR, life, width) {
   });
 }
 
+function spawnPowerup(x, y, type) {
+  type = type || POWERUP_KEYS[Math.floor(Math.random() * POWERUP_KEYS.length)];
+  game.powerups.push({ x, y, type, life: 600, bob: Math.random() * 6.28 });
+}
+
+function applyPowerup(type) {
+  const p = game.player;
+  const def = POWERUPS[type];
+  if (!p || !def) return;
+  sfx('levelup');
+  game.screenFlash = Math.max(game.screenFlash, 6);
+  spawnShockwave(p.x, p.y, def.color, 80, 24, 5);
+  spawnParticles(p.x, p.y, def.glow, 22, 4, 26, 3);
+  toast(def.name + '!');
+
+  if (def.timed > 0) {
+    game.activePowerups[type] = def.timed;
+    return;
+  }
+  // Instant effects:
+  if (type === 'nova') {
+    game.screenShake = Math.max(game.screenShake, 18);
+    game.screenFlash = Math.max(game.screenFlash, 10);
+    spawnShockwave(p.x, p.y, '#ffaa22', Math.max(W, H), 34, 9);
+    const dmg = 60 + game.wave * 12;
+    for (let i = game.enemies.length - 1; i >= 0; i--) {
+      const e = game.enemies[i];
+      const killed = e.takeDamage(dmg);
+      spawnParticles(e.x, e.y, '#ffcc44', 6, 3, 14, 2);
+      if (killed) { killEnemy(e); game.enemies.splice(i, 1); }
+    }
+    game.enemyProjectiles = [];   // also wipe incoming bolts
+  } else if (type === 'mend') {
+    const maxHp = p.getStats().maxHp;
+    p.hp = Math.min(maxHp, p.hp + Math.ceil(maxHp * 0.5));
+    spawnParticles(p.x, p.y, '#ff88aa', 20, 3, 24, 3);
+  }
+}
+
 function spawnLumina(x, y, count) {
   for (let i = 0; i < count; i++) {
     const orb = new LuminaOrb(
@@ -1926,6 +1979,17 @@ function dist(x1, y1, x2, y2) {
 
 function doCollision(a, b) {
   return dist(a.x, a.y, b.x, b.y) < a.radius + b.radius;
+}
+
+function roundRectPath(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 function upgradeScreen() {
@@ -2642,7 +2706,28 @@ function update() {
       game.luminaOrbs.splice(i, 1);
     }
   }
-  
+
+  // Power-up pickups — gentle magnet, collect on touch, despawn on timeout.
+  for (let i = game.powerups.length - 1; i >= 0; i--) {
+    const pu = game.powerups[i];
+    pu.life--;
+    const d = dist(pu.x, pu.y, p.x, p.y);
+    if (d < 130) {                       // drift toward the player when near
+      const a = Math.atan2(p.y - pu.y, p.x - pu.x);
+      pu.x += Math.cos(a) * 1.6;
+      pu.y += Math.sin(a) * 1.6;
+    }
+    if (d < p.radius + 16) { applyPowerup(pu.type); game.powerups.splice(i, 1); continue; }
+    if (pu.life <= 0) game.powerups.splice(i, 1);
+  }
+
+  // Active timed power-ups countdown.
+  for (const k in game.activePowerups) {
+    if (--game.activePowerups[k] <= 0) delete game.activePowerups[k];
+  }
+  // Shield keeps the wisp invulnerable while active.
+  if (game.activePowerups.shield > 0) p.invincible = Math.max(p.invincible, 2);
+
   // Screen shake & flash decay
   if (game.screenShake > 0) game.screenShake *= 0.85;
   if (game.screenShake < 0.5) game.screenShake = 0;
@@ -2667,6 +2752,12 @@ function killEnemy(e) {
   // Lumina drops as orbs
   const dropCount = e.type === 'boss' ? 25 : e.type === 'blight' ? 6 : e.type === 'spawner' ? 5 : 3;
   spawnLumina(e.x, e.y, dropCount);
+
+  // Rare power-up drop — bosses always, tougher foes sometimes, fodder rarely.
+  if (!e._killPending) {
+    const pchance = e.type === 'boss' ? 1 : (e.type === 'blight' || e.type === 'spawner') ? 0.12 : 0.025;
+    if (Math.random() < pchance) spawnPowerup(e.x, e.y);
+  }
   
   // Death explosion - layered
   const colors = ['#ff8800', '#ffcc44', '#ffffff', '#ff6600'];
@@ -3100,7 +3191,29 @@ function render() {
   }
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
-  
+
+  // Power-up pickups — glowing orb with a pulsing ring, glyph and fade-out.
+  for (const pu of game.powerups) {
+    const def = POWERUPS[pu.type];
+    const bob = Math.sin(game.gameTime * 0.08 + pu.bob) * 3;
+    const fade = pu.life < 90 ? (Math.floor(game.gameTime / 6) % 2 ? 0.4 : 1) : 1;  // blink before expiring
+    const px = pu.x, py = pu.y + bob;
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.strokeStyle = def.color; ctx.lineWidth = 2;
+    ctx.shadowColor = def.glow; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.arc(px, py, 13 + Math.sin(game.gameTime * 0.12 + pu.bob) * 1.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = def.color;
+    ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#1a1030';
+    ctx.font = 'bold 13px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(def.letter, px, py + 1);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+
   // Trail
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -3320,7 +3433,20 @@ function render() {
   ctx.fill();
   ctx.globalAlpha = 1;
   ctx.restore();
-  
+
+  // Shield bubble while Aegis is active.
+  if (game.activePowerups.shield > 0) {
+    ctx.save();
+    const sr = p.radius + 14 + Math.sin(game.gameTime * 0.18) * 2;
+    ctx.globalAlpha = 0.5 + 0.2 * Math.sin(game.gameTime * 0.18);
+    ctx.strokeStyle = '#88ddff'; ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#66ccff'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(p.x, p.y, sr, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.12; ctx.fillStyle = '#66ccff';
+    ctx.beginPath(); ctx.arc(p.x, p.y, sr, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
   // Character-specific effects
   ctx.save();
   if (p.charId === 'prism') {
@@ -3403,12 +3529,35 @@ function render() {
     ctx.restore();
   }
 
+  // Active power-up buffs — pills with a draining timer, bottom-left.
+  {
+    let bx = 14, by = H - 96;
+    for (const k in game.activePowerups) {
+      const def = POWERUPS[k]; if (!def) continue;
+      const frac = game.activePowerups[k] / def.timed;
+      ctx.save();
+      ctx.fillStyle = 'rgba(10,8,24,0.7)';
+      ctx.strokeStyle = def.color; ctx.lineWidth = 1.5;
+      roundRectPath(bx, by, 96, 22, 7); ctx.fill(); ctx.stroke();
+      // drain bar
+      ctx.fillStyle = def.color; ctx.globalAlpha = 0.25;
+      roundRectPath(bx, by, 96 * frac, 22, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = def.color;
+      ctx.font = 'bold 11px "Space Grotesk", sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(def.letter + ' ' + def.name, bx + 8, by + 12);
+      ctx.restore();
+      by -= 28;
+    }
+  }
+
   // Screen flash overlay
   if (game.screenFlash > 0) {
     ctx.fillStyle = `rgba(255,200,100,${game.screenFlash / 40})`;
     ctx.fillRect(0, 0, W, H);
   }
-  
+
   // Bottom glow
   ctx.save();
   const hudGrad = ctx.createLinearGradient(0, H-40, 0, H);
@@ -3666,6 +3815,20 @@ function computeAutoMove(p, stats) {
       const w = (danger - d) / danger;
       ax += (ex / d) * w * w * 4;
       ay += (ey / d) * w * w * 4;
+    }
+  }
+
+  // 1c. Grab nearby power-ups — high priority, worth a small detour.
+  if (Math.hypot(ax, ay) < 1.6 && game.powerups.length) {
+    let best = null, bd = Infinity;
+    for (const pu of game.powerups) {
+      const d = dist(p.x, p.y, pu.x, pu.y);
+      if (d < bd) { bd = d; best = pu; }
+    }
+    if (best) {
+      const d = Math.hypot(best.x - p.x, best.y - p.y) || 1;
+      ax += ((best.x - p.x) / d) * 1.2;
+      ay += ((best.y - p.y) / d) * 1.2;
     }
   }
 
