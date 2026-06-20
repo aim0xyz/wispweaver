@@ -1770,8 +1770,8 @@ class Enemy {
       if (Math.abs(this.knockbackX) < 0.1) this.knockbackX = 0;
       if (Math.abs(this.knockbackY) < 0.1) this.knockbackY = 0;
     }
-    this.x = Math.max(this.radius, Math.min(W - this.radius, this.x));
-    this.y = Math.max(this.radius, Math.min(H - this.radius, this.y));
+    this.x = Math.max(this.radius, Math.min(game.mapW - this.radius, this.x));
+    this.y = Math.max(this.radius, Math.min(game.mapH - this.radius, this.y));
   }
 }
 
@@ -2900,9 +2900,11 @@ function update() {
         game.screenFlash = 4;
         game.hitStop = 3;
         sfx('hurt');
-        const a = Math.atan2(e.y - p.y, e.x - p.x);
+        const a = Math.atan2(p.y - e.y, p.x - e.x);
         p.x += Math.cos(a) * 20;
         p.y += Math.sin(a) * 20;
+        p.x = Math.max(p.radius, Math.min(game.mapW - p.radius, p.x));
+        p.y = Math.max(p.radius, Math.min(game.mapH - p.radius, p.y));
         spawnParticles(p.x, p.y, '#ff4444', 20, 4, 20, 3);
         
         // Damage text
@@ -2969,7 +2971,8 @@ function update() {
       }
     }
     
-    if (proj.x < -50 || proj.x > W+50 || proj.y < -50 || proj.y > H+50) {
+    if (proj.x < game.camera.x - 50 || proj.x > game.camera.x + W + 50 ||
+        proj.y < game.camera.y - 50 || proj.y > game.camera.y + H + 50) {
       game.projectiles.splice(i, 1);
     }
   }
@@ -2990,7 +2993,8 @@ function update() {
   for (let i = game.enemyProjectiles.length - 1; i >= 0; i--) {
     const ep = game.enemyProjectiles[i];
     ep.x += ep.vx; ep.y += ep.vy; ep.life--;
-    if (ep.life <= 0 || ep.x < -40 || ep.x > W + 40 || ep.y < -40 || ep.y > H + 40) {
+    if (ep.life <= 0 || ep.x < game.camera.x - 40 || ep.x > game.camera.x + W + 40 ||
+        ep.y < game.camera.y - 40 || ep.y > game.camera.y + H + 40) {
       game.enemyProjectiles.splice(i, 1);
       continue;
     }
@@ -4078,7 +4082,7 @@ function resizeCanvas() {
   canvas.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   game._stars = null;   // regenerate starfield for the new dimensions
-  if (game.mode === 'explore' && game.state === 'playing') {
+  if (game.mode === 'explore') {
     game.mapW = W * 3; game.mapH = H * 3;
   } else {
     game.mapW = W; game.mapH = H;
