@@ -1711,23 +1711,27 @@ function svgChain(color) {
 
 function svgVerdant(color) {
   const c = color || '#44ff88';
+  let petals = '';
+  for (let i = 0; i < 6; i++) {
+    petals += `<path d="M24 24 C29 16 28 9 24 4 C20 9 19 16 24 24Z" fill="${c}" opacity="0.5" transform="rotate(${i * 60} 24 24)"/>`;
+  }
   return `<svg viewBox="0 0 48 48" width="48" height="48">
-    <path d="M24 40 C24 40 10 30 10 18 C10 10 24 6 24 6 C24 6 38 10 38 18 C38 30 24 40 24 40Z" fill="${c}" opacity="0.15"/>
-    <path d="M24 36 C24 36 13 27 13 18 C13 12 24 9 24 9 C24 9 35 12 35 18 C35 27 24 36 24 36Z" fill="${c}" opacity="0.4"/>
-    <line x1="24" y1="10" x2="24" y2="38" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
-    <line x1="24" y1="20" x2="17" y2="14" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-    <line x1="24" y1="27" x2="31" y2="21" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-    <circle cx="24" cy="24" r="3" fill="${c}" opacity="0.85"/>
+    ${petals}
+    <circle cx="24" cy="24" r="5.5" fill="${c}"/>
+    <circle cx="24" cy="24" r="2.4" fill="#eaffe0"/>
   </svg>`;
 }
 function svgVortex(color) {
   const c = color || '#6644ff';
+  let arms = '';
+  for (let k = 0; k < 3; k++) {
+    arms += `<path d="M24 24 C24 18 27 12 36 9" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" opacity="0.9" transform="rotate(${k * 120} 24 24)"/>`;
+  }
   return `<svg viewBox="0 0 48 48" width="48" height="48">
-    <circle cx="24" cy="24" r="16" fill="none" stroke="${c}" stroke-width="1.5" opacity="0.2"/>
-    <circle cx="24" cy="24" r="10" fill="none" stroke="${c}" stroke-width="1.5" opacity="0.35"/>
-    <circle cx="24" cy="24" r="4" fill="${c}" opacity="0.75"/>
-    <path d="M24 8 A16 16 0 0 1 40 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M24 14 A10 10 0 0 1 34 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+    <circle cx="24" cy="24" r="17" fill="none" stroke="${c}" stroke-width="1" opacity="0.18"/>
+    ${arms}
+    <circle cx="24" cy="24" r="6" fill="#1a0d33"/>
+    <circle cx="24" cy="24" r="6" fill="none" stroke="#bba6ff" stroke-width="1.6"/>
   </svg>`;
 }
 
@@ -3861,6 +3865,53 @@ function drawPlayerBody(p, r) {
     ctx.beginPath(); ctx.moveTo(0, -r * 1.25); ctx.lineTo(0, r * 1.25);
     ctx.moveTo(-r, -r * 0.4); ctx.lineTo(r, r * 0.4); ctx.stroke();
     ctx.restore();
+  } else if (p.charId === 'verdant') {
+    // Living bloom — breathing petals around a luminous seed.
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(t * 0.008);
+    const breathe = 1 + Math.sin(t * 0.06) * 0.09;
+    const petals = 6;
+    for (let i = 0; i < petals; i++) {
+      ctx.save();
+      ctx.rotate((i / petals) * Math.PI * 2);
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(r * 0.6 * breathe, -r * 0.5, r * 0.42 * breathe, -r * 1.6 * breathe, 0, -r * 1.75 * breathe);
+      ctx.bezierCurveTo(-r * 0.42 * breathe, -r * 1.6 * breathe, -r * 0.6 * breathe, -r * 0.5, 0, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  } else if (p.charId === 'vortex') {
+    // Gravity well — counter-rotating spiral arms around a dark singularity.
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(t * 0.05);
+    ctx.strokeStyle = p.color; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    const arms = 3;
+    for (let k = 0; k < arms; k++) {
+      ctx.beginPath();
+      const base = (k / arms) * Math.PI * 2;
+      for (let s = 0; s <= 14; s++) {
+        const tt = s / 14;
+        const rad = r * 0.35 + tt * r * 1.55;
+        const ang = base + tt * 2.6;
+        const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+        s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.globalAlpha = 0.9;
+      ctx.stroke();
+    }
+    ctx.restore();
+    // Dark event-horizon core with a bright accretion rim.
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.72, 0, Math.PI * 2);
+    ctx.fillStyle = '#15082e'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = '#bba6ff'; ctx.stroke();
+    ctx.fillStyle = p.color;
   } else {
     // echo — ringed orb
     ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
@@ -4333,6 +4384,44 @@ function render() {
       ctx.arc(p.x + Math.cos(a) * r * 0.4, p.y + Math.sin(a) * r * 0.4, 2 + Math.random() * 2, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
+  if (p.charId === 'verdant') {
+    // Soft nature ring marking the life-aura damage zone, plus drifting spores.
+    const pulse = 0.5 + 0.5 * Math.sin(game.gameTime * 0.05);
+    ctx.globalAlpha = 0.07 + 0.05 * pulse;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 70, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = p.glow; ctx.lineWidth = 1.5;
+    ctx.shadowColor = p.glow; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 70, 0, Math.PI * 2); ctx.stroke();
+    for (let i = 0; i < 5; i++) {
+      const a = game.gameTime * 0.018 + i * (Math.PI * 2 / 5);
+      const rr = 24 + Math.sin(game.gameTime * 0.04 + i) * 5;
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = '#c8ffd6';
+      ctx.shadowColor = p.glow; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * rr, p.y + Math.sin(a) * rr, 2.2, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  if (p.charId === 'vortex') {
+    // Accretion motes spiralling inward + a ring that fills before each pulse.
+    for (let i = 0; i < 7; i++) {
+      const spiral = ((game.gameTime * 0.6 + i * 26) % 60) / 60;   // 1→0 inward
+      const rr = 6 + (1 - spiral) * 42;
+      const a = game.gameTime * 0.05 + i * (Math.PI * 2 / 7) + spiral * 4.5;
+      ctx.globalAlpha = 0.15 + 0.5 * spiral;
+      ctx.fillStyle = i % 2 ? '#9977ff' : '#c4b3ff';
+      ctx.shadowColor = p.glow; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * rr, p.y + Math.sin(a) * rr, 2, 0, Math.PI * 2); ctx.fill();
+    }
+    const charge = Math.min(1, (p.vortexTimer || 0) / 300);
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = charge > 0.85 ? '#ffffff' : p.color;
+    ctx.lineWidth = 2.5; ctx.shadowColor = p.glow; ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius + 11, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+    ctx.stroke();
   }
   ctx.restore(); // character effects
 
