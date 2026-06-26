@@ -1913,6 +1913,38 @@ function svgVortex(color) {
     <circle cx="24" cy="24" r="6" fill="none" stroke="#bba6ff" stroke-width="1.6"/>
   </svg>`;
 }
+function svgPhantom(color) {
+  const c = color || '#c8beff';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <ellipse cx="24" cy="26" rx="12" ry="14" fill="${c}" opacity="0.18"/>
+    <ellipse cx="24" cy="26" rx="12" ry="14" fill="none" stroke="${c}" stroke-width="1.4" opacity="0.6"/>
+    <circle cx="24" cy="19" r="9" fill="${c}" opacity="0.22"/>
+    <circle cx="24" cy="19" r="9" fill="none" stroke="${c}" stroke-width="1.8"/>
+    <circle cx="20.5" cy="18" r="2.2" fill="${c}"/>
+    <circle cx="27.5" cy="18" r="2.2" fill="${c}"/>
+    <ellipse cx="24" cy="38" rx="4" ry="2.5" fill="${c}" opacity="0.3"/>
+    <ellipse cx="17" cy="36" rx="3" ry="2" fill="${c}" opacity="0.2"/>
+    <ellipse cx="31" cy="36" rx="3" ry="2" fill="${c}" opacity="0.2"/>
+  </svg>`;
+}
+function svgNova(color) {
+  const c = color || '#fff4aa';
+  let rays = '';
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const x1 = 24 + Math.cos(a) * 11, y1 = 24 + Math.sin(a) * 11;
+    const x2 = 24 + Math.cos(a) * 19, y2 = 24 + Math.sin(a) * 19;
+    rays += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${c}" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>`;
+  }
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <circle cx="24" cy="24" r="20" fill="${c}" opacity="0.06"/>
+    ${rays}
+    <circle cx="24" cy="24" r="10" fill="${c}" opacity="0.22"/>
+    <circle cx="24" cy="24" r="10" fill="none" stroke="${c}" stroke-width="2"/>
+    <circle cx="24" cy="24" r="5" fill="${c}" opacity="0.9"/>
+    <circle cx="22" cy="22" r="2" fill="#fffde0" opacity="0.8"/>
+  </svg>`;
+}
 
 // ─── ICON MAP ───
 const ICON_MAP = {
@@ -1923,6 +1955,7 @@ const ICON_MAP = {
   heart_flame: svgHeartFlame, ember: svgEmber,
   starburst: svgStarburst, magnet: svgMagnet, chain: svgChain,
   verdant: svgVerdant, vortex: svgVortex,
+  phantom: svgPhantom, nova: svgNova,
 };
 
 function getIconSVG(name, color) {
@@ -1941,10 +1974,22 @@ const CHARACTERS = [
     bonus: { projectiles:1 }, passives:'shatter' },
   { id:'echo',   name:'Echo',   icon:'echo',   desc:'Resonant wisps that hunt the gloom',   ability:'Homing projectiles + echo on kill', color:'#44ffaa', glow:'#22dd88',
     bonus: { }, passives:'homing' },
-  { id:'verdant', name:'Verdant', icon:'verdant', desc:'Lebendiges Licht, das durch den Kampf heilt', ability:'Lebensweg · +4 HP pro Kill · Naturhauch-Aura',
-    bonus: { hp: 20 }, color:'#44ff88', glow:'#22cc66', unlock: 4500 },
-  { id:'vortex',  name:'Vortex',  icon:'vortex',  desc:'Urkraft der Gravitation — kein Feind entkommt', ability:'Gravitationspuls · Alle 5s Sogwelle + Schaden',
-    bonus: { damage: 3 }, color:'#6644ff', glow:'#4422dd', unlock: 10000 },
+  { id:'verdant', name:'Verdant', icon:'verdant',
+    desc:'Saugt Leben aus jedem Treffer — sät Samenbomben, die die Dunkelheit zerfetzen',
+    ability:'Lebensraub · Samenbombe (alle 12 Kills) · Naturhauch-Aura',
+    bonus: { hp: 10 }, color:'#44ff88', glow:'#22cc66', unlock: 4500 },
+  { id:'vortex',  name:'Vortex',  icon:'vortex',
+    desc:'Raumkrümmung als Waffe — sammelt orbitale Trümmer und entfesselt Singularitäten',
+    ability:'Gravitationspuls · Orbitale Trümmer · SINGULARITÄT alle 3 Pulse',
+    bonus: { damage: 4 }, color:'#6644ff', glow:'#4422dd', unlock: 10000 },
+  { id:'phantom', name:'Phantom', icon:'phantom',
+    desc:'Meister der Schatten — hinterlässt Geisterkopien beim Dash und wandelt Schmerz in Macht',
+    ability:'Schattenecho · Phasenrüstung · Schattensalve alle 5 Schüsse',
+    bonus: { speed: 0.5 }, color:'#c8beff', glow:'#8877ff', unlock: 20000 },
+  { id:'nova',    name:'Nova',    icon:'nova',
+    desc:'Lebendiger Stern — lädt Sternenergie auf, verbrennt Feinde in der Nähe und explodiert am Rand des Todes',
+    ability:'Sternkern-Aufladung · Koronenhalo · Supernova (1× pro Run)',
+    bonus: { damage: 6 }, color:'#fff4aa', glow:'#ffcc00', unlock: 35000 },
 ];
 
 // ─── UPGRADES ───
@@ -2168,6 +2213,12 @@ class Player {
     this.echoTimer = 0;
     this.vortexTimer = 0;
     this.vortexPullActive = 0;
+    this.vortexPulseCount = 0;
+    this.verdantKills = 0;
+    this.shadowCount = 0;       // Phantom: counts attacks for shade volley
+    this.novaCharge = 0;        // Nova: stellar charge 0-300
+    this.supernovaUsed = false; // Nova: one-time supernova flag
+    this.coronaTimer = 0;       // Nova: corona damage tick
 
     // Apply character base bonuses
     if (ch.bonus) {
@@ -2478,6 +2529,9 @@ function startGame() {
   game.trail = [];
   game.damageTexts = [];
   game.luminaOrbs = [];
+  game.verdantSeeds = [];   // Verdant: pending seed-bomb explosions
+  game.vortexOrbiters = []; // Vortex: orbiting debris enemies
+  game.phantomEchoes = [];  // Phantom: ghost clones from dashing
   game.spawnTimer = 0;
   game.enemiesSpawned = 0;
   game.waveActive = false;
@@ -2721,6 +2775,17 @@ function playerAttack() {
   }
 
   p.attackPulse = count > 1 ? 8 : 6;
+
+  // Phantom: shade volley — every 5th attack fires a heavy shadow bolt
+  if (p.charId === 'phantom') {
+    p.shadowCount = (p.shadowCount || 0) + 1;
+    if (p.shadowCount % 5 === 0) {
+      const shadowProj = new Projectile(p.x, p.y, baseAngle, 9, stats.damage * 2.2, true, '#4422aa', '#8855ff', 0);
+      shadowProj.radius = 8;
+      game.projectiles.push(shadowProj);
+      spawnParticles(p.x, p.y, '#8855ff', 12, 5, 14, 3);
+    }
+  }
 
   // Muzzle flash toward the primary (forward) direction
   spawnParticles(
@@ -3210,6 +3275,10 @@ function update() {
       sfx('dash');
       spawnShockwave(p.x, p.y, p.color, 46, 16, 4);
       spawnParticles(p.x, p.y, p.glow, 16, 5, 18, 3);
+      // Phantom: leave a shadow echo at dash origin
+      if (p.charId === 'phantom' && game.phantomEchoes) {
+        game.phantomEchoes.push({ x: p.x, y: p.y, life: 80, fireTimer: 0 });
+      }
     }
   }
 
@@ -3335,49 +3404,194 @@ function update() {
     }
   }
   
-  // Verdant: nature aura — deals 1 dmg/tick to nearby enemies
+  // Verdant: buffed nature aura + seed bomb update
   if (p.charId === 'verdant') {
     p.burnAura++;
     if (p.burnAura % 10 === 0) {
       const dead = [];
       for (const e of game.enemies) {
-        if (dist(p.x, p.y, e.x, e.y) < 70) {
-          e.hp -= 1;
+        if (dist(p.x, p.y, e.x, e.y) < 80) {
+          e.hp -= 2.5;
           if (e.hp <= 0) dead.push(e);
           spawnParticles(e.x, e.y, '#44ff88', 2, 1.5, 8, 1.5);
         }
       }
       for (const d of dead) { killEnemy(d); game.enemies = game.enemies.filter(ee => ee !== d); }
     }
+    // Seed bomb countdown + explosion
+    for (let si = game.verdantSeeds.length - 1; si >= 0; si--) {
+      const seed = game.verdantSeeds[si];
+      seed.life--;
+      if (seed.life <= 0) {
+        // Eruption — 8 radial projectiles
+        const dmg = stats.damage * 0.7;
+        for (let ray = 0; ray < 8; ray++) {
+          const ang = (ray / 8) * Math.PI * 2;
+          const rp = new Projectile(seed.x, seed.y, ang, 5.5, dmg, true, '#44ff88', '#22cc66', 0);
+          rp.radius = 5;
+          game.projectiles.push(rp);
+        }
+        spawnShockwave(seed.x, seed.y, '#44ff88', 90, 28, 5);
+        spawnParticles(seed.x, seed.y, '#44ff88', 30, 4.5, 30, 3.5);
+        spawnParticles(seed.x, seed.y, '#aaffcc', 15, 6, 20, 2);
+        game.verdantSeeds.splice(si, 1);
+        sfx('kill');
+      }
+    }
   }
 
-  // Vortex: gravity pulse every 5s — pulls enemies in and deals 20 damage
+  // Vortex: upgraded gravity pulse (4s, singularity every 3rd) + orbiter update
   if (p.charId === 'vortex') {
     p.vortexTimer++;
-    if (p.vortexTimer >= 300) {
+    if (p.vortexTimer >= 240) {
       p.vortexTimer = 0;
-      p.vortexPullActive = 25;
-      spawnShockwave(p.x, p.y, '#6644ff', 360, 35, 8);
-      spawnShockwave(p.x, p.y, '#9977ff', 200, 20, 5);
-      spawnParticles(p.x, p.y, '#6644ff', 30, 5, 25, 4);
-      game.screenFlash = Math.max(game.screenFlash, 6);
+      p.vortexPulseCount++;
+      const isSingularity = p.vortexPulseCount % 3 === 0;
+      const pullRadius = isSingularity ? 520 : 360;
+      const baseDmg = isSingularity ? 60 : 20;
+      p.vortexPullActive = isSingularity ? 45 : 25;
+      if (isSingularity) {
+        spawnShockwave(p.x, p.y, '#ff88ff', pullRadius, 55, 10);
+        spawnShockwave(p.x, p.y, '#6644ff', pullRadius * 0.6, 40, 7);
+        spawnShockwave(p.x, p.y, '#ffffff', pullRadius * 0.3, 28, 4);
+        spawnParticles(p.x, p.y, '#ff88ff', 60, 7, 40, 5);
+        spawnParticles(p.x, p.y, '#6644ff', 40, 5, 30, 4);
+        game.screenShake = Math.max(game.screenShake, 14);
+        game.screenFlash = Math.max(game.screenFlash, 10);
+        game._flashColor = '100,50,255';
+        showStory('SINGULARITÄT — Zeit kollabiert!');
+      } else {
+        spawnShockwave(p.x, p.y, '#6644ff', pullRadius, 35, 8);
+        spawnShockwave(p.x, p.y, '#9977ff', 200, 20, 5);
+        spawnParticles(p.x, p.y, '#6644ff', 30, 5, 25, 4);
+        game.screenFlash = Math.max(game.screenFlash, 6);
+      }
       const dead = [];
       for (const e of game.enemies) {
-        if (dist(p.x, p.y, e.x, e.y) < 360) { e.hp -= 20; if (e.hp <= 0) dead.push(e); }
+        if (dist(p.x, p.y, e.x, e.y) < pullRadius) {
+          e.hp -= baseDmg;
+          if (isSingularity) e.slow = (e.slow || 0) + 90; // stun/slow
+          if (e.hp <= 0) dead.push(e);
+        }
       }
       for (const d of dead) { killEnemy(d); game.enemies = game.enemies.filter(ee => ee !== d); }
     }
     if (p.vortexPullActive > 0) {
       p.vortexPullActive--;
+      const pullStr = p.vortexPullActive > 25 ? 9 : 6; // singularity pulls harder
       for (const e of game.enemies) {
         const d = dist(p.x, p.y, e.x, e.y);
-        if (d < 360 && d > 20) {
+        if (d < 520 && d > 20) {
           const a = Math.atan2(p.y - e.y, p.x - e.x);
-          e.x += Math.cos(a) * 6;
-          e.y += Math.sin(a) * 6;
+          e.x += Math.cos(a) * pullStr;
+          e.y += Math.sin(a) * pullStr;
         }
       }
     }
+    // Orbiter collision — damage enemies they touch
+    for (let oi = game.vortexOrbiters.length - 1; oi >= 0; oi--) {
+      const orb = game.vortexOrbiters[oi];
+      orb.life--; orb.angle += 0.055;
+      if (orb.life <= 0) { game.vortexOrbiters.splice(oi, 1); continue; }
+      orb.x = p.x + Math.cos(orb.angle) * orb.orbitR;
+      orb.y = p.y + Math.sin(orb.angle) * orb.orbitR;
+      const dead2 = [];
+      for (const e of game.enemies) {
+        if (dist(orb.x, orb.y, e.x, e.y) < orb.radius + e.radius) {
+          e.hp -= 10; spawnParticles(orb.x, orb.y, '#9977ff', 4, 3, 8, 2);
+          if (e.hp <= 0) dead2.push(e);
+        }
+      }
+      for (const d of dead2) { killEnemy(d); game.enemies = game.enemies.filter(ee => ee !== d); }
+    }
+  }
+
+  // Phantom: phase echo cleanup + shade volley tracking in attack() section
+  if (p.charId === 'phantom') {
+    for (let pi2 = game.phantomEchoes.length - 1; pi2 >= 0; pi2--) {
+      const echo = game.phantomEchoes[pi2];
+      echo.life--;
+      echo.fireTimer = (echo.fireTimer || 0) + 1;
+      if (echo.fireTimer === 12) {
+        // Fire 6 radial shots from phantom position
+        for (let ray = 0; ray < 6; ray++) {
+          const ang = (ray / 6) * Math.PI * 2;
+          const ep2 = new Projectile(echo.x, echo.y, ang, 5, stats.damage * 0.8, true, '#c8beff', '#8877ff', 0);
+          ep2.radius = 4;
+          game.projectiles.push(ep2);
+        }
+        sfx('shoot');
+        spawnShockwave(echo.x, echo.y, '#c8beff', 60, 20, 3);
+      }
+      if (echo.life <= 0) {
+        spawnParticles(echo.x, echo.y, '#c8beff', 18, 4, 18, 2.5);
+        game.phantomEchoes.splice(pi2, 1);
+      }
+    }
+  }
+
+  // Nova: stellar charge + corona halo damage
+  if (p.charId === 'nova') {
+    const maxCharge = 300;
+    p.novaCharge++;
+    if (p.novaCharge >= maxCharge) {
+      p.novaCharge = 0;
+      // Fire 12 radial projectiles
+      for (let ray = 0; ray < 12; ray++) {
+        const ang = (ray / 12) * Math.PI * 2;
+        const np = new Projectile(p.x, p.y, ang, 6, stats.damage * 1.4, true, '#fff4aa', '#ffcc00', 0);
+        np.radius = 6;
+        game.projectiles.push(np);
+      }
+      spawnShockwave(p.x, p.y, '#ffcc00', 180, 30, 6);
+      spawnShockwave(p.x, p.y, '#ffffff', 90, 22, 4);
+      spawnParticles(p.x, p.y, '#fff4aa', 40, 6, 35, 4);
+      spawnParticles(p.x, p.y, '#ffcc00', 25, 4, 25, 3);
+      game.screenFlash = Math.max(game.screenFlash, 8);
+      game._flashColor = '255,220,80';
+      sfx('kill');
+    }
+    // Corona halo — damages nearby enemies
+    p.coronaTimer++;
+    if (p.coronaTimer % 12 === 0) {
+      const coronaR = p.radius + 22;
+      const dead3 = [];
+      for (const e of game.enemies) {
+        if (dist(p.x, p.y, e.x, e.y) < coronaR + e.radius) {
+          e.hp -= 8;
+          spawnParticles(e.x, e.y, '#fff4aa', 3, 2, 8, 1.5);
+          if (e.hp <= 0) dead3.push(e);
+        }
+      }
+      for (const d of dead3) { killEnemy(d); game.enemies = game.enemies.filter(ee => ee !== d); }
+    }
+    // Supernova — triggered automatically at low HP
+    if (!p.supernovaUsed && p.hp > 0 && p.hp / stats.maxHp < 0.2) {
+      p.supernovaUsed = true;
+      const dead4 = [];
+      for (const e of game.enemies) {
+        if (dist(p.x, p.y, e.x, e.y) < 380) { e.hp -= 50; if (e.hp <= 0) dead4.push(e); }
+      }
+      for (const d of dead4) { killEnemy(d); game.enemies = game.enemies.filter(ee => ee !== d); }
+      spawnShockwave(p.x, p.y, '#ffffff', 380, 55, 10);
+      spawnShockwave(p.x, p.y, '#ffcc00', 280, 44, 8);
+      spawnShockwave(p.x, p.y, '#ff8800', 180, 32, 6);
+      spawnParticles(p.x, p.y, '#fff4aa', 80, 8, 55, 5);
+      spawnParticles(p.x, p.y, '#ffcc00', 50, 6, 45, 4);
+      spawnParticles(p.x, p.y, '#ffffff', 30, 10, 35, 3);
+      p.hp = Math.min(stats.maxHp, 45);
+      game.screenShake = Math.max(game.screenShake, 24);
+      game.screenFlash = Math.max(game.screenFlash, 16);
+      game._flashColor = '255,240,100';
+      game.hitStop = Math.max(game.hitStop, 12);
+      sfx('boss');
+      showStory('SUPERNOVA — Der Stern explodiert!');
+    }
+  }
+
+  // Enemy slow decay
+  for (const e of game.enemies) {
+    if (e.slow > 0) e.slow--;
   }
 
   if (p.invincible > 0) p.invincible--;
@@ -3453,18 +3667,19 @@ function update() {
     
     const angleToPlayer = Math.atan2(p.y - e.y, p.x - e.x);
     const dToPlayer = dist(e.x, e.y, p.x, p.y);
-    
+    const moveSpd = e.speed * (e.slow > 0 ? 0.3 : 1);
+
     if (e.type === 'caster') {
       // Kiter: hold a preferred range, strafe, and fire dodgeable bolts.
       if (dToPlayer < e.preferredDist - 30) {
-        e.x -= Math.cos(angleToPlayer) * e.speed;        // back away
-        e.y -= Math.sin(angleToPlayer) * e.speed;
+        e.x -= Math.cos(angleToPlayer) * moveSpd;        // back away
+        e.y -= Math.sin(angleToPlayer) * moveSpd;
       } else if (dToPlayer > e.preferredDist + 30) {
-        e.x += Math.cos(angleToPlayer) * e.speed;        // close in
-        e.y += Math.sin(angleToPlayer) * e.speed;
+        e.x += Math.cos(angleToPlayer) * moveSpd;        // close in
+        e.y += Math.sin(angleToPlayer) * moveSpd;
       } else {
-        e.x += Math.cos(angleToPlayer + Math.PI / 2) * e.speed * 0.6;  // strafe
-        e.y += Math.sin(angleToPlayer + Math.PI / 2) * e.speed * 0.6;
+        e.x += Math.cos(angleToPlayer + Math.PI / 2) * moveSpd * 0.6;  // strafe
+        e.y += Math.sin(angleToPlayer + Math.PI / 2) * moveSpd * 0.6;
       }
       e.castCooldown--;
       if (e.castCooldown <= 0 && dToPlayer < 460) {
@@ -3483,13 +3698,13 @@ function update() {
       // always have room to reposition. Its real threat is the committed dash,
       // which locks a direction and never tracks you mid-attack.
       if (e.chargeFlash <= 0 && dToPlayer > e.radius + p.radius) {
-        e.x += Math.cos(angleToPlayer) * e.speed * 0.38;
-        e.y += Math.sin(angleToPlayer) * e.speed * 0.38;
+        e.x += Math.cos(angleToPlayer) * moveSpd * 0.38;
+        e.y += Math.sin(angleToPlayer) * moveSpd * 0.38;
       }
     } else if (e.type !== 'spawner' || game.enemies.length < 20) {
       if (dToPlayer > e.radius + p.radius) {
-        e.x += Math.cos(angleToPlayer) * e.speed;
-        e.y += Math.sin(angleToPlayer) * e.speed;
+        e.x += Math.cos(angleToPlayer) * moveSpd;
+        e.y += Math.sin(angleToPlayer) * moveSpd;
       }
     }
     
@@ -3561,7 +3776,9 @@ function update() {
     if (doCollision(e, p)) {
       if (p.invincible <= 0) {
         p.hp -= e.damage;
-        p.invincible = 20;
+        // Phantom: phase resilience — extended iframes on hit
+        p.invincible = p.charId === 'phantom' ? 72 : 20;
+        if (p.charId === 'phantom') spawnParticles(p.x, p.y, '#c8beff', 20, 5, 22, 3);
         game.screenShake = 10;
         game.screenFlash = 4; game._flashColor = '255,40,40';
         game.hitStop = 3;
@@ -3602,7 +3819,12 @@ function update() {
       if (doCollision(proj, e)) {
         const killed = e.takeDamage(proj.damage);
         proj.hitEnemies.add(e);
-        
+
+        // Verdant lifesteal — heal on every hit
+        if (game.player && game.player.charId === 'verdant') {
+          game.player.hp = Math.min(game.player.getStats().maxHp, game.player.hp + 1.5);
+        }
+
         // Damage text
         const dmgColor = killed ? '#ffcc00' : '#ffffff';
         const dmgSize = killed ? 28 : 18;
@@ -3856,10 +4078,25 @@ function killEnemy(e) {
       spawnParticles(e.x, e.y, '#66ddff', 8, 5, 8, 2);
     }
 
-    // Verdant: heal 4 HP per kill
+    // Verdant: seed bomb plant every 12 kills
     if (p.charId === 'verdant') {
-      p.hp = Math.min(p.getStats().maxHp, p.hp + 4);
-      spawnParticles(e.x, e.y, '#44ff88', 8, 3, 12, 2);
+      p.verdantKills++;
+      if (p.verdantKills % 12 === 0) {
+        game.verdantSeeds.push({ x: p.x, y: p.y, life: 150 });
+        game.damageTexts.push(new DamageText(p.x, p.y - 30, 'SAMENBOMBE!', '#44ff88', 22));
+      }
+    }
+
+    // Vortex: killed enemies during pull become orbital debris
+    if (p.charId === 'vortex' && p.vortexPullActive > 0 && game.vortexOrbiters.length < 5) {
+      const startAngle = game.vortexOrbiters.length * (Math.PI * 2 / 5);
+      game.vortexOrbiters.push({
+        x: e.x, y: e.y, life: 480,
+        angle: startAngle,
+        orbitR: 55 + game.vortexOrbiters.length * 10,
+        radius: Math.max(5, e.radius * 0.65),
+        color: '#9977ff',
+      });
     }
     
     // Explode on kill upgrade (Sparkburst) — inside guard so chain reactions are blocked
@@ -4344,6 +4581,130 @@ function render() {
     ctx.strokeRect(0, 0, game.mapW, game.mapH);
     ctx.restore();
   }
+
+  // ─── CHARACTER SPECIAL VISUALS ───────────────────────────────────────────
+
+  // Verdant: seed bombs — pulsing green orbs on the ground
+  if (game.verdantSeeds) {
+    for (const seed of game.verdantSeeds) {
+      const sx = game.mode === 'explore' ? seed.x - game.camera.x : seed.x;
+      const sy = game.mode === 'explore' ? seed.y - game.camera.y : seed.y;
+      const progress = 1 - seed.life / 150; // 0→1 as countdown ends
+      const pulse = 0.7 + 0.3 * Math.sin(game.gameTime * 0.18 * (1 + progress * 3));
+      const r = 6 + progress * 10;
+      ctx.save();
+      if (PERF.addBlend) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.35 + progress * 0.35;
+        ctx.fillStyle = '#44ff88';
+        ctx.beginPath(); ctx.arc(sx, sy, r * 2.8 * pulse, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalAlpha = 0.9;
+      ctx.shadowColor = '#44ff88'; ctx.shadowBlur = PERF.shadowGlow ? 16 : 0;
+      ctx.fillStyle = `hsl(${140 + progress * 20}, 100%, ${40 + progress * 20}%)`;
+      ctx.beginPath(); ctx.arc(sx, sy, r * pulse, 0, Math.PI * 2); ctx.fill();
+      // Spinning leaf marks around seed
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#aaffcc';
+      ctx.lineWidth = 1.5; ctx.globalAlpha = 0.5 + progress * 0.4;
+      for (let lf = 0; lf < 4; lf++) {
+        const la = (lf / 4) * Math.PI * 2 + game.gameTime * 0.04 * (1 + progress);
+        ctx.beginPath();
+        ctx.arc(sx + Math.cos(la) * (r + 5), sy + Math.sin(la) * (r + 5), 2.5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // Vortex: orbital debris — spinning glowing blobs around player
+  if (game.vortexOrbiters && p) {
+    for (const orb of game.vortexOrbiters) {
+      const ox = game.mode === 'explore' ? orb.x - game.camera.x : orb.x;
+      const oy = game.mode === 'explore' ? orb.y - game.camera.y : orb.y;
+      const lifeF = orb.life / 480;
+      ctx.save();
+      if (PERF.addBlend) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = lifeF * 0.4;
+        ctx.fillStyle = '#6644ff';
+        ctx.beginPath(); ctx.arc(ox, oy, orb.radius * 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalAlpha = lifeF;
+      ctx.shadowColor = '#9977ff'; ctx.shadowBlur = PERF.shadowGlow ? 12 : 0;
+      ctx.fillStyle = '#9977ff';
+      ctx.beginPath(); ctx.arc(ox, oy, orb.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff'; ctx.globalAlpha = lifeF * 0.5;
+      ctx.beginPath(); ctx.arc(ox - orb.radius * 0.3, oy - orb.radius * 0.3, orb.radius * 0.35, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Phantom: ghost echo clones
+  if (game.phantomEchoes) {
+    for (const echo of game.phantomEchoes) {
+      const ex = game.mode === 'explore' ? echo.x - game.camera.x : echo.x;
+      const ey = game.mode === 'explore' ? echo.y - game.camera.y : echo.y;
+      const lifeF = echo.life / 80;
+      ctx.save();
+      if (PERF.addBlend) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = lifeF * 0.25;
+        ctx.fillStyle = '#c8beff';
+        ctx.beginPath(); ctx.arc(ex, ey, p.radius * 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalAlpha = lifeF * 0.55;
+      ctx.shadowColor = '#8877ff'; ctx.shadowBlur = PERF.shadowGlow ? 18 : 0;
+      drawPlayerBody({ ...p, x: ex, y: ey, color: '#c8beff', glow: '#8877ff', charId: '_ghost' }, p.radius);
+      ctx.restore();
+    }
+  }
+
+  // Nova: stellar charge ring + corona halo
+  if (p && p.charId === 'nova') {
+    const px = game.mode === 'explore' ? p.x - game.camera.x : p.x;
+    const py = game.mode === 'explore' ? p.y - game.camera.y : p.y;
+    const chargeF = p.novaCharge / 300;
+    // Stellar charge ring — grows and brightens as it fills
+    const chargeR = p.radius + 18 + chargeF * 28;
+    const chargeAlpha = 0.15 + chargeF * 0.65;
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,220,80,${chargeAlpha})`;
+    ctx.lineWidth = 2.5 + chargeF * 3;
+    ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = PERF.shadowGlow ? (8 + chargeF * 22) : 0;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(px, py, chargeR, -Math.PI / 2, -Math.PI / 2 + chargeF * Math.PI * 2);
+    ctx.stroke();
+    // When almost full, flash outer burst
+    if (chargeF > 0.9) {
+      ctx.globalAlpha = (chargeF - 0.9) * 8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(px, py, chargeR + 5, 0, Math.PI * 2); ctx.stroke();
+    }
+    // Corona halo
+    const coronaR = p.radius + 22;
+    const coronaPulse = 0.7 + 0.3 * Math.sin(game.gameTime * 0.12);
+    ctx.globalAlpha = 0.5 * coronaPulse;
+    ctx.strokeStyle = '#fff4aa';
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = PERF.shadowGlow ? 14 : 0;
+    ctx.beginPath(); ctx.arc(px, py, coronaR, 0, Math.PI * 2); ctx.stroke();
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.12 * coronaPulse;
+      ctx.fillStyle = '#ffcc00';
+      ctx.beginPath(); ctx.arc(px, py, coronaR + 8, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+  }
+
+  // ─── END CHARACTER SPECIAL VISUALS ───────────────────────────────────────
 
   // Lumina orbs — diamond sparkle with rotating glint
   for (const orb of game.luminaOrbs) {
