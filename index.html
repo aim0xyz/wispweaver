@@ -1526,7 +1526,7 @@
         <line x1="2" y1="12" x2="6" y2="12"/>
         <line x1="18" y1="12" x2="22" y2="12"/>
       </svg>
-      Radiant Echo
+      <span id="upWorldName">The Gloomwood</span>
     </h2>
     <div class="wave-done">Wave <span id="upWaveNum">1</span> — choose your upgrade</div>
     <div class="upgrade-grid" id="upgradeGrid"></div>
@@ -3151,7 +3151,7 @@ function playerAttack() {
     const chained = new Set();
     const arcPoints = [{ x: p.x, y: p.y }];
     const toKill = [];
-    const voltMaxHops = 4 + stats.chain; // Kettenblitz-Upgrade: jede Stufe = +1 Sprung
+    const voltMaxHops = 4 + stats.chain;
     const voltChainRange = 290 * stats.range;
     for (let hop = 0; hop < voltMaxHops; hop++) {
       let bestE = null, bestD = Infinity;
@@ -3282,6 +3282,7 @@ function upgradeScreen() {
   game.state = 'upgrade';
   document.getElementById('upgrade-screen').classList.remove('hidden');
   document.getElementById('upWaveNum').textContent = game.wave;
+  document.getElementById('upWorldName').textContent = getWorld(game.wave).name;
 
   const grid = document.getElementById('upgradeGrid');
   grid.innerHTML = '';
@@ -3619,7 +3620,7 @@ function renderShop() {
         <span class="si-icon">${getIconSVG(ch.icon, ch.color)}</span>
         <div class="si-titles">
           <div class="si-name">${ch.name}</div>
-          <div class="si-lvl">${owned ? 'Unlocked' : 'Wisp'}</div>
+          <div class="si-lvl">${owned ? 'Unlocked' : 'Character'}</div>
         </div>
       </div>
       <div class="si-desc">${ch.ability}</div>
