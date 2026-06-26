@@ -2227,11 +2227,13 @@ const CHARACTERS = [
   { id:'puls', name:'Puls', icon:'puls',
     desc:'Kein Projektil — nur Schockwellen, die alles auf ihrem Weg vernichten',
     ability:'360°-Schadenswelle · Doppelring-Angriff · Wellenkaskade',
-    bonus: { hp: 15 }, color:'#44ccff', glow:'#1188cc', unlock: 45000 },
+    bonus: { hp: 15 }, color:'#44ccff', glow:'#1188cc', unlock: 45000,
+    excludeUpgrades: ['extra_shot', 'chain'] },
   { id:'volt', name:'Volt', icon:'volt',
     desc:'Entfesselt Kettenblitze, die von Feind zu Feind springen und alles versengen',
-    ability:'Kettenblitz (4 Feinde) · Blitzüberspannung · Dauerhafter Schaden',
-    bonus: { damage: 5 }, color:'#ffee55', glow:'#ddaa00', unlock: 55000 },
+    ability:'Kettenblitz (+1 Sprung/Kettenangriff-Stufe) · Blitzreichweite · Dauerhafter Schaden',
+    bonus: { damage: 5 }, color:'#ffee55', glow:'#ddaa00', unlock: 55000,
+    excludeUpgrades: ['extra_shot'] },
   { id:'apex', name:'Apex', icon:'apex',
     desc:'Kein Feind entkommt — jedes Projektil ist eine unerbittliche Suchrakete die ihr Ziel findet',
     ability:'Homing-Raketen · 3 Suchraketen ab Start · Langer Raketenschweif',
@@ -3128,12 +3130,14 @@ function playerAttack() {
     const chained = new Set();
     const arcPoints = [{ x: p.x, y: p.y }];
     const toKill = [];
-    for (let hop = 0; hop < 4; hop++) {
+    const voltMaxHops = 4 + stats.chain; // Kettenblitz-Upgrade: jede Stufe = +1 Sprung
+    const voltChainRange = 290 * stats.range;
+    for (let hop = 0; hop < voltMaxHops; hop++) {
       let bestE = null, bestD = Infinity;
       for (const e of game.enemies) {
         if (chained.has(e)) continue;
         const d = dist(lastX, lastY, e.x, e.y);
-        if (d < 290 && d < bestD) { bestD = d; bestE = e; }
+        if (d < voltChainRange && d < bestD) { bestD = d; bestE = e; }
       }
       if (!bestE) break;
       chained.add(bestE);
@@ -3246,7 +3250,9 @@ function roundRectPath(x, y, w, h, r) {
 }
 
 function upgradeScreen() {
-  const available = ALL_UPGRADES.filter(u => (game.upgradeLevels[u.id] || 0) < u.maxLvl);
+  const charData = CHARACTERS.find(c => c.id === game.character);
+  const excluded = new Set(charData?.excludeUpgrades || []);
+  const available = ALL_UPGRADES.filter(u => (game.upgradeLevels[u.id] || 0) < u.maxLvl && !excluded.has(u.id));
   const shuffled = [...available].sort(() => Math.random() - 0.5);
   const picks = shuffled.slice(0, 3);
 
