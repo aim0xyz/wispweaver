@@ -1344,6 +1344,203 @@
   @keyframes killFlashAnim {
     from { opacity:0.7; } to { opacity:0; }
   }
+
+  /* ════════════════════════════════════════════
+     ═══ MENU POLISH — PLAYFUL & ANIMATED ═══
+     ════════════════════════════════════════════ */
+
+  /* All buttons: satisfying press feedback */
+  .btn:active:not(:disabled) { transform: scale(0.93) !important; transition: transform 0.08s ease !important; }
+  .diff-btn:active, .mode-btn:active { transform: scale(0.88) !important; transition: transform 0.08s ease !important; }
+  .carousel-arrow:active { transform: scale(0.85) !important; transition: transform 0.08s ease !important; }
+  .si-buy:active:not(:disabled) { transform: scale(0.92) !important; transition: transform 0.08s ease !important; }
+  .upgrade-card:active { transform: translateY(-2px) scale(0.97) !important; transition: transform 0.08s ease !important; }
+
+  /* ─── Floating light motes in menu ─── */
+  .menu-motes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .menu-mote {
+    position: absolute; border-radius: 50%; will-change: transform, opacity;
+    animation: menMoteDrift var(--dur, 9s) ease-in-out var(--delay, 0s) infinite alternate;
+  }
+  @keyframes menMoteDrift {
+    0%   { transform: translate(0,0) scale(0.7); opacity: 0.08; }
+    40%  { opacity: var(--pk, 0.55); }
+    100% { transform: translate(var(--dx,30px), var(--dy,-55px)) scale(1.3); opacity: 0.06; }
+  }
+
+  /* ─── Menu title: dramatic glow breath ─── */
+  #menu-screen .title {
+    animation: titleSheen 6s linear infinite, titleFloat 5s ease-in-out infinite, titleGlowBreathe 2.8s ease-in-out infinite !important;
+  }
+  @keyframes titleGlowBreathe {
+    0%,100% { filter: drop-shadow(0 0 28px rgba(255,136,0,0.45)); }
+    50%     { filter: drop-shadow(0 0 55px rgba(255,190,0,0.9)) drop-shadow(0 0 90px rgba(255,100,0,0.35)); }
+  }
+
+  /* ─── Menu emblem: bigger orb + outer rings ─── */
+  #menu-screen .menu-emblem {
+    width: 92px; height: 92px; margin-bottom: 22px;
+    filter: drop-shadow(0 0 20px rgba(255,160,60,0.5));
+  }
+  #menu-screen .menu-emblem span:nth-child(1) {
+    animation: emberPulse 1.6s ease-in-out infinite !important;
+  }
+  #menu-screen .menu-emblem::before {
+    content: ''; position: absolute; inset: -20px; border-radius: 50%;
+    border: 1.5px solid rgba(255,180,80,0.22);
+    animation: emSpin 16s linear infinite;
+    box-shadow: 0 0 14px rgba(255,150,60,0.12), inset 0 0 8px rgba(255,150,60,0.06);
+  }
+  #menu-screen .menu-emblem::after {
+    content: ''; position: absolute; inset: -32px; border-radius: 50%;
+    border: 1px solid rgba(150,120,255,0.14);
+    animation: emSpin 22s linear infinite reverse;
+  }
+
+  /* ─── Primary CTA: breathing glow ring ─── */
+  .btn-primary { position: relative; }
+  .btn-primary::before {
+    content: ''; position: absolute; inset: -3px; border-radius: 15px; pointer-events: none;
+    border: 2px solid rgba(255,160,60,0);
+    animation: btnGlowRing 2.2s ease-in-out infinite;
+  }
+  @keyframes btnGlowRing {
+    0%,100% { border-color: rgba(255,160,60,0); box-shadow: none; }
+    50%     { border-color: rgba(255,190,60,0.55); box-shadow: 0 0 28px rgba(255,160,60,0.45); }
+  }
+
+  /* ─── WEAVE confirm: breathing glow when enabled ─── */
+  #selectConfirm:not(:disabled) {
+    animation: weaveBreathe 2s ease-in-out infinite;
+  }
+  @keyframes weaveBreathe {
+    0%,100% { box-shadow: 0 4px 20px rgba(255,136,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
+    50%     { box-shadow: 0 8px 42px rgba(255,170,0,0.75), 0 0 64px rgba(255,136,0,0.28), inset 0 1px 0 rgba(255,255,255,0.3); }
+  }
+
+  /* ─── Wisp orb wrapper + orbiting rings ─── */
+  .wisp-orb-wrap {
+    position: relative; width: 76px; height: 76px;
+    margin: 0 auto 14px;
+  }
+  .wisp-orb-wrap .wisp-orb { width: 100%; height: 100%; margin: 0; }
+  .orb-ring {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    border: 1.5px solid transparent;
+  }
+  .orb-ring-1 {
+    inset: -14px;
+    border-top-color: rgba(255,255,255,0.35);
+    border-right-color: rgba(255,255,255,0.1);
+    animation: orbRingSpin 3.2s linear infinite;
+  }
+  .orb-ring-2 {
+    inset: -24px;
+    border-bottom-color: rgba(255,255,255,0.18);
+    border-left-color: rgba(255,255,255,0.08);
+    animation: orbRingSpin 5.5s linear infinite reverse;
+  }
+  @keyframes orbRingSpin { to { transform: rotate(360deg); } }
+
+  /* ─── Wisp card: springy entrance + hover glow ─── */
+  .wisp-card.enter-l { animation: wcBounceL 0.48s cubic-bezier(.2,.8,.25,1.15) !important; }
+  .wisp-card.enter-r { animation: wcBounceR 0.48s cubic-bezier(.2,.8,.25,1.15) !important; }
+  @keyframes wcBounceL { from { opacity:0; transform: translateX(-52px) scale(0.9) rotateY(10deg); } to { opacity:1; transform:none; } }
+  @keyframes wcBounceR { from { opacity:0; transform: translateX(52px) scale(0.9) rotateY(-10deg); } to { opacity:1; transform:none; } }
+  .wisp-card { transition: box-shadow 0.25s ease, transform 0.2s ease !important; }
+  .wisp-card:hover:not(.locked) {
+    transform: translateY(-4px) scale(1.015) !important;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55),
+                0 0 60px color-mix(in srgb, var(--wc) 42%, transparent),
+                inset 0 1px 0 rgba(255,255,255,0.12) !important;
+  }
+
+  /* ─── Shop items: hover glow burst ─── */
+  .shop-item::before {
+    content: ''; position: absolute; top: 50%; left: 50%; border-radius: 50%;
+    width: 180%; height: 180%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--ac) 16%, transparent) 0%, transparent 65%);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    opacity: 0; pointer-events: none; z-index: 0;
+  }
+  .shop-item:hover::before {
+    transform: translate(-50%, -50%) scale(1); opacity: 1;
+  }
+  .shop-item > * { position: relative; z-index: 1; }
+
+  /* ─── Shop purchase flash ─── */
+  @keyframes shopPurchased {
+    0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+    30%  { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,255,255,0.2); }
+    100% { transform: scale(1); box-shadow: 0 0 0 22px rgba(255,255,255,0); }
+  }
+  .shop-item.purchased { animation: shopPurchased 0.42s ease forwards; }
+
+  /* ─── Mode & diff buttons: active pill glow ─── */
+  .diff-btn.active {
+    animation: activePillDiff 2.2s ease-in-out infinite;
+  }
+  .mode-btn.active {
+    animation: activePillMode 2.2s ease-in-out infinite;
+  }
+  @keyframes activePillDiff {
+    0%,100% { box-shadow: 0 0 14px rgba(255,160,60,0.3); }
+    50%     { box-shadow: 0 0 26px rgba(255,180,60,0.6); }
+  }
+  @keyframes activePillMode {
+    0%,100% { box-shadow: 0 0 14px rgba(80,160,255,0.3); }
+    50%     { box-shadow: 0 0 26px rgba(80,180,255,0.6); }
+  }
+
+  /* ─── Shop title: color shimmer ─── */
+  #shop-screen h2 {
+    background-size: 280% auto !important;
+    animation: shopTitleSheen 5s linear infinite;
+  }
+  @keyframes shopTitleSheen { to { background-position: 280% center; } }
+
+  /* ─── Character select title: glow shimmer ─── */
+  #select-screen h2 {
+    background: linear-gradient(110deg, #ff9966, #fff8f0, #ffcc88, #fff, #ff9966);
+    background-size: 280% auto;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: selectTitleSheen 6s linear infinite;
+    filter: drop-shadow(0 0 20px rgba(255,160,100,0.5));
+    margin-bottom: 8px;
+  }
+  @keyframes selectTitleSheen { to { background-position: 280% center; } }
+
+  /* ─── Upgrade cards: bigger pop on hover ─── */
+  .upgrade-card:hover {
+    transform: translateY(-9px) scale(1.04) !important;
+  }
+
+  /* ─── Game over: slide in from top ─── */
+  @keyframes gameoverEnter {
+    from { opacity:0; transform: translateY(-24px) scale(0.97); }
+    to   { opacity:1; transform: none; }
+  }
+  #gameover-screen:not(.hidden) { animation: gameoverEnter 0.45s cubic-bezier(.2,.8,.2,1); }
+
+  /* ─── Leaderboard: slide in ─── */
+  @keyframes lbEnter {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: none; }
+  }
+  #leaderboard-screen:not(.hidden) { animation: lbEnter 0.4s cubic-bezier(.2,.8,.2,1); }
+
+  /* ─── Carousel arrows: bigger + glow ─── */
+  .carousel-arrow:hover {
+    box-shadow: 0 0 20px rgba(255,180,90,0.4) !important;
+  }
+
+  /* ─── Menu panel: subtle inner glow ─── */
+  #menu-screen .menu-panel {
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.06),
+                inset 0 0 40px rgba(255,140,40,0.04) !important;
+  }
 </style>
 </head>
 <body>
@@ -1455,6 +1652,7 @@
   <!-- Menu -->
   <div class="screen-overlay" id="menu-screen">
     <div class="menu-aura"><span></span><span></span><span></span></div>
+    <div class="menu-motes" id="menuMotes"></div>
     <div class="menu-emblem" id="menuEmblem"><span></span><span></span><span></span></div>
     <div class="title">WISPWEAVER</div>
     <div class="subtitle">Echoes of Light</div>
@@ -2947,7 +3145,11 @@ function renderCharSelect(dir) {
   const enter = dir === undefined ? '' : (dir < 0 ? ' enter-l' : ' enter-r');
   stage.innerHTML = `
     <div class="wisp-card${enter}${locked ? ' locked' : ''}" style="--wc:${ch.color};--wg:${ch.glow}">
-      <div class="wisp-orb">${getIconSVG(ch.icon, '#1a1320')}</div>
+      <div class="wisp-orb-wrap">
+        <div class="wisp-orb">${getIconSVG(ch.icon, '#1a1320')}</div>
+        <div class="orb-ring orb-ring-1" style="border-top-color:color-mix(in srgb,${ch.color} 50%,rgba(255,255,255,0.3));border-right-color:color-mix(in srgb,${ch.color} 20%,transparent)"></div>
+        <div class="orb-ring orb-ring-2" style="border-bottom-color:color-mix(in srgb,${ch.color} 30%,rgba(255,255,255,0.2));border-left-color:color-mix(in srgb,${ch.color} 15%,transparent)"></div>
+      </div>
       <div class="wisp-name">${ch.name}</div>
       <div class="wisp-desc">${ch.desc}</div>
       <div class="wisp-traits">${wispTraits(ch)}</div>
@@ -3683,7 +3885,7 @@ function renderShop() {
       <button class="si-buy" ${maxed || cost > bank ? 'disabled' : ''}>
         ${maxed ? '✓ MAX' : '◈ ' + cost}
       </button>`;
-    if (!maxed) card.querySelector('.si-buy').onclick = () => buyShopItem(item.id);
+    if (!maxed) card.querySelector('.si-buy').onclick = () => buyShopItem(item.id, card);
     grid.appendChild(card);
   }
 
@@ -3711,11 +3913,11 @@ function renderShop() {
       <button class="si-buy" ${owned || ch.unlock > bank ? 'disabled' : ''}>
         ${owned ? '✓ OWNED' : '◈ ' + ch.unlock.toLocaleString()}
       </button>`;
-    if (!owned) card2.querySelector('.si-buy').onclick = () => buyCharUnlock(ch.id);
+    if (!owned) card2.querySelector('.si-buy').onclick = () => buyCharUnlock(ch.id, card2);
     grid.appendChild(card2);
   }
 }
-function buyShopItem(id) {
+function buyShopItem(id, cardEl) {
   const item = SHOP_ITEMS.find(i => i.id === id);
   if (!item) return;
   const levels = getShopLevels();
@@ -3729,9 +3931,10 @@ function buyShopItem(id) {
   Store.set('ww_shop', JSON.stringify(levels));
   sfx('levelup');
   toast(item.name + ' Level ' + (lvl + 1));
-  renderShop();
+  if (cardEl) { cardEl.classList.add('purchased'); setTimeout(renderShop, 420); }
+  else renderShop();
 }
-function buyCharUnlock(id) {
+function buyCharUnlock(id, cardEl) {
   const ch = CHARACTERS.find(c => c.id === id);
   if (!ch || !ch.unlock) return;
   const bank = getBank();
@@ -3740,7 +3943,8 @@ function buyCharUnlock(id) {
   setCharUnlock(id);
   sfx('levelup');
   toast(ch.name + ' unlocked!');
-  renderShop();
+  if (cardEl) { cardEl.classList.add('purchased'); setTimeout(renderShop, 420); }
+  else renderShop();
 }
 
 // ─── GAME LOOP ───
@@ -7375,6 +7579,42 @@ try {
       setTimeout(() => { emblem.style.filter = ''; }, 180);
       updateMenuBest();
     }
+  });
+})();
+
+// ─── MENU MOTES: floating light particles ───
+(function initMenuMotes() {
+  const container = document.getElementById('menuMotes');
+  if (!container) return;
+  const configs = [
+    { l:8,  t:82, s:3,   pk:0.6, dur:7,  delay:0,   dx:35,  dy:-55, color:'#ffaa44' },
+    { l:22, t:65, s:2,   pk:0.4, dur:9,  delay:1.5, dx:-25, dy:-70, color:'#ff7722' },
+    { l:38, t:78, s:4,   pk:0.7, dur:8,  delay:3,   dx:50,  dy:-45, color:'#ffcc66' },
+    { l:55, t:72, s:2.5, pk:0.5, dur:11, delay:0.8, dx:-40, dy:-60, color:'#ffdd88' },
+    { l:70, t:80, s:3,   pk:0.55,dur:9,  delay:2,   dx:30,  dy:-65, color:'#ffaa44' },
+    { l:85, t:68, s:2,   pk:0.4, dur:7,  delay:4,   dx:-20, dy:-50, color:'#ff9933' },
+    { l:15, t:45, s:1.5, pk:0.3, dur:12, delay:0.5, dx:45,  dy:-40, color:'#aa88ff' },
+    { l:45, t:55, s:3.5, pk:0.6, dur:10, delay:2.5, dx:-35, dy:-55, color:'#ffbb55' },
+    { l:62, t:40, s:2,   pk:0.35,dur:8,  delay:1,   dx:25,  dy:-70, color:'#ff8844' },
+    { l:78, t:50, s:2.5, pk:0.5, dur:13, delay:3.5, dx:-30, dy:-48, color:'#88aaff' },
+    { l:30, t:30, s:1.5, pk:0.3, dur:9,  delay:5,   dx:40,  dy:-35, color:'#ffcc44' },
+    { l:92, t:38, s:3,   pk:0.5, dur:11, delay:1.8, dx:-45, dy:-60, color:'#ff9955' },
+    { l:5,  t:20, s:2,   pk:0.4, dur:14, delay:4.5, dx:30,  dy:-42, color:'#aa99ff' },
+    { l:50, t:18, s:1.5, pk:0.28,dur:10, delay:6,   dx:-22, dy:-38, color:'#ffdd66' },
+    { l:72, t:22, s:2.5, pk:0.45,dur:8,  delay:2.8, dx:38,  dy:-55, color:'#ffaa55' },
+  ];
+  configs.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'menu-mote';
+    el.style.cssText = `
+      width:${c.s}px; height:${c.s}px;
+      left:${c.l}%; top:${c.t}%;
+      background: radial-gradient(circle, ${c.color}, rgba(255,200,100,0.4) 50%, transparent 72%);
+      box-shadow: 0 0 ${c.s * 3}px ${c.color};
+      --pk:${c.pk}; --dur:${c.dur}s; --delay:${c.delay}s;
+      --dx:${c.dx}px; --dy:${c.dy}px;
+    `;
+    container.appendChild(el);
   });
 })();
 
