@@ -1070,6 +1070,9 @@
     color: #aaffdd;
     box-shadow: 0 0 14px rgba(136,255,204,0.35);
   }
+  #autoBtn.arena-only {
+    opacity: 0.3; pointer-events: none; filter: grayscale(1);
+  }
   #autoMenu {
     position: absolute; top: 52px; right: 12px; z-index: 40;
     background: rgba(18,16,38,0.97);
@@ -2169,6 +2172,13 @@ function setMode(m) {
   game.mode = m;
   document.querySelectorAll('.mode-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.mode === m));
+  const autoBtn = document.getElementById('autoBtn');
+  if (m === 'explore') {
+    if (game.autoMode !== 'off') { game.autoMode = 'off'; updateAutoBtn(); }
+    if (autoBtn) autoBtn.classList.add('arena-only');
+  } else {
+    if (autoBtn) autoBtn.classList.remove('arena-only');
+  }
 }
 function setDifficulty(d) {
   if (!DIFFICULTIES[d]) return;
@@ -5746,6 +5756,7 @@ function updateAutoBtn() {
     o.classList.toggle('sel', o.dataset.mode === game.autoMode));
 }
 function toggleAutoMenu() {
+  if (game.mode === 'explore') return;
   const m = document.getElementById('autoMenu');
   if (m) m.classList.toggle('open');
   Sound.resume();
@@ -5764,6 +5775,7 @@ function setAutoMode(mode) {
 }
 // Keyboard "P" cycles through the modes.
 function cycleAutoMode() {
+  if (game.mode === 'explore') return;
   const order = ['off', 'steer', 'pick', 'both'];
   setAutoMode(order[(order.indexOf(game.autoMode) + 1) % order.length]);
 }
