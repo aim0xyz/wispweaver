@@ -2334,9 +2334,53 @@ const WORLDS = [
     ambientColor: '#cc44ff',
   },
   {
+    id: 'shatterspire', name: 'The Shattered Spire',
+    flavor: 'What stood for centuries now bleeds light.',
+    range: 'Waves 41–50', chapter: 'V', nameColor: '#ff4444',
+    bgDark: '#100000', bgMid: '#1a0505',
+    nebulaTints: ['#660011','#440008','#880022'],
+    starColors:  ['#ffcccc','#ff8888','#ff4444','#ffaaaa'],
+    gridColor:   'rgba(255,50,50,0.04)',
+    vignetteRgb: '80,0,0',
+    ambientColor: '#cc2222',
+  },
+  {
+    id: 'shadowsea', name: 'The Shadow Sea',
+    flavor: 'Light dissolves here. Only pressure remains.',
+    range: 'Waves 51–60', chapter: 'VI', nameColor: '#22ddcc',
+    bgDark: '#000a0c', bgMid: '#001418',
+    nebulaTints: ['#002233','#003344','#001122'],
+    starColors:  ['#aaffee','#55ddcc','#22bbaa','#88ffee'],
+    gridColor:   'rgba(0,180,160,0.035)',
+    vignetteRgb: '0,30,40',
+    ambientColor: '#00bbaa',
+  },
+  {
+    id: 'netherforge', name: 'The Nether Forge',
+    flavor: 'The dark is forged here — hammered into something worse.',
+    range: 'Waves 61–70', chapter: 'VII', nameColor: '#ff8822',
+    bgDark: '#0a0400', bgMid: '#150800',
+    nebulaTints: ['#441100','#663300','#220800'],
+    starColors:  ['#ffcc88','#ff9944','#ffaa00','#ffdd66'],
+    gridColor:   'rgba(255,120,0,0.04)',
+    vignetteRgb: '60,20,0',
+    ambientColor: '#ff6600',
+  },
+  {
+    id: 'celestialtomb', name: 'The Celestial Tomb',
+    flavor: 'Stars die here. Their last breath is your battlefield.',
+    range: 'Waves 71–80', chapter: 'VIII', nameColor: '#aaaaff',
+    bgDark: '#010008', bgMid: '#04001a',
+    nebulaTints: ['#110033','#220044','#0a0022'],
+    starColors:  ['#ffffff','#ccaaff','#aaaaff','#eeddff'],
+    gridColor:   'rgba(160,120,255,0.04)',
+    vignetteRgb: '20,0,60',
+    ambientColor: '#8866ff',
+  },
+  {
     id: 'eternal',     name: 'The Eternal Dark',
     flavor: 'Here the light ends. Here legend begins.',
-    range: 'Waves 41+',    chapter: 'V',  nameColor: '#ffdd44',
+    range: 'Waves 81+',    chapter: 'IX',  nameColor: '#ffdd44',
     bgDark: '#000000', bgMid: '#080604',
     nebulaTints: ['#332200','#1a1100','#221a00'],
     starColors:  ['#ffffff','#ffe066','#ffcc00','#ffdd88'],
@@ -2699,6 +2743,28 @@ class Enemy {
         this.glow = '#88ddff';
         this.score = 18;
         break;
+      case 'specter':
+        this.radius = 9;
+        this.hp = 22 + wave * 2.5;
+        this.maxHp = this.hp;
+        this.speed = 3.2 + wave * 0.055;
+        this.damage = 10 + Math.floor(wave * 0.4);
+        this.color = '#44ffcc';
+        this.glow = '#00ddaa';
+        this.score = 28;
+        this.phaseTimer = 0;
+        break;
+      case 'revenant':
+        this.radius = 13;
+        this.hp = 85 + wave * 5;
+        this.maxHp = this.hp;
+        this.speed = 1.1 + wave * 0.02;
+        this.damage = 15 + Math.floor(wave * 0.6);
+        this.color = '#8866ff';
+        this.glow = '#5533cc';
+        this.score = 55;
+        this.regenTimer = 0;
+        break;
       case 'boss': {
         this.radius = 34;
         this.hp = 280 + wave * 32;
@@ -2711,13 +2777,17 @@ class Enemy {
         this.chargeCooldown = 0;
         this.chargeAngle = 0;
         this.variant = Math.max(0, Math.floor(wave / 10) - 1);
-        const bv = this.variant % 5;
+        const bv = this.variant % 9;
         const BOSS_VARIANTS = [
-          { name: 'THE GLOOM WING',      color: '#cc2244', glow: '#880022', spikes: 11 },
-          { name: 'THE ASH TITAN',       color: '#ff6622', glow: '#cc3300', spikes: 7  },
-          { name: 'THE VOID HERALD',     color: '#00aadd', glow: '#006688', spikes: 6  },
-          { name: 'THE CRYSTAL TYRANT',  color: '#cc44ff', glow: '#880088', spikes: 14 },
-          { name: 'THE ETERNAL DARK',    color: '#ffdd00', glow: '#aa8800', spikes: 9  },
+          { name: 'THE GLOOM WING',        color: '#cc2244', glow: '#880022', spikes: 11 },
+          { name: 'THE ASH TITAN',         color: '#ff6622', glow: '#cc3300', spikes: 7  },
+          { name: 'THE VOID HERALD',       color: '#00aadd', glow: '#006688', spikes: 6  },
+          { name: 'THE CRYSTAL TYRANT',    color: '#cc44ff', glow: '#880088', spikes: 14 },
+          { name: 'THE SHATTER LORD',      color: '#ff2222', glow: '#aa0000', spikes: 16 },
+          { name: 'THE ABYSSAL LEVIATHAN', color: '#00ddcc', glow: '#008877', spikes: 8  },
+          { name: 'THE FORGE COLOSSUS',    color: '#ff8800', glow: '#cc5500', spikes: 12 },
+          { name: 'THE STAR REVENANT',     color: '#9988ff', glow: '#5544cc', spikes: 18 },
+          { name: 'THE ETERNAL DARK',      color: '#ffdd00', glow: '#aa8800', spikes: 9  },
         ];
         const bdata = BOSS_VARIANTS[bv];
         this.color = bdata.color;
@@ -4125,6 +4195,10 @@ function update() {
           'The Ash Titan awakens — forged from cosmic fire.',
           'The Void Herald steps through the threshold between being and nothing.',
           'The Crystal Tyrant rises — more beautiful and more deadly than ever before.',
+          'The Shatter Lord emerges from the ruins — fragments of a broken world made flesh.',
+          'The Abyssal Leviathan surfaces from depths no light has ever reached.',
+          'The Forge Colossus strides through rivers of fire — hammered from pure darkness.',
+          'The Star Revenant reforms from starlight and ash — death itself takes a new shape.',
           'The Eternal Dark itself takes form. The end begins.',
         ];
         const storyIdx = Math.min(Math.floor(game.wave / 10) - 1, bossStories.length - 1);
@@ -4160,6 +4234,10 @@ function update() {
           if (game.wave >= 40) types.push('soul');
           if (game.wave >= 45 && Math.random() < 0.5) types.push('soul');
           if (game.wave >= 50 && Math.random() < 0.4) types.push('soul');
+          if (game.wave >= 55) types.push('specter');
+          if (game.wave >= 60 && Math.random() < 0.45) types.push('specter');
+          if (game.wave >= 65) types.push('revenant');
+          if (game.wave >= 70 && Math.random() < 0.35) types.push('revenant');
           const type = types[Math.floor(Math.random() * types.length)];
           spawnEnemy(type);
           game.enemiesSpawned++;
@@ -5549,6 +5627,166 @@ function drawWorldEnv(w, t, mode) {
       ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.015 + i * 0.5);
       ctx.beginPath();
       ctx.moveTo(0, -sz * 3.5); ctx.lineTo(sz, 0); ctx.lineTo(0, sz * 3.5); ctx.lineTo(-sz, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+  } else if (w.id === 'shatterspire') {
+    // SHATTERED SPIRE: Falling rubble, crimson ground cracks, ruin silhouettes
+    ctx.globalCompositeOperation = 'source-over';
+    // Ground crack glow at bottom
+    const crackAlpha = (0.07 + Math.sin(t * 0.009) * 0.03) * (explore ? 1.4 : 1);
+    ctx.globalAlpha = crackAlpha;
+    const crackGrad = ctx.createLinearGradient(0, H * 0.75, 0, H);
+    crackGrad.addColorStop(0, 'transparent');
+    crackGrad.addColorStop(1, '#cc0000');
+    ctx.fillStyle = crackGrad;
+    ctx.fillRect(0, H * 0.75, W, H * 0.25);
+    // Crimson cracks across screen
+    const crackCount = explore ? 6 : 3;
+    for (let i = 0; i < crackCount; i++) {
+      const cx = (i / crackCount + 0.1) * W + Math.sin(t * 0.003 + i) * 18;
+      const alpha = (0.04 + Math.sin(t * 0.007 + i * 1.4) * 0.02) * (explore ? 1.5 : 1);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#ff2200';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx, H * 0.6);
+      ctx.lineTo(cx + Math.sin(i * 2.1) * 30, H * 0.3);
+      ctx.lineTo(cx + Math.sin(i * 1.3) * 55, H * 0.05);
+      ctx.stroke();
+    }
+    // Falling rubble debris
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    const debrisCount = explore ? 42 : 18;
+    for (let i = 0; i < debrisCount; i++) {
+      const phase = ((t * 0.004 + i * 0.39) % 1);
+      const x = (i * 103.7 + Math.sin(t * 0.008 + i) * 14) % W;
+      const y = phase * (H + 40) - 20;
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.5 : 0.22);
+      const sz = 1.5 + (i % 3) * 0.9;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = i % 2 === 0 ? '#cc2200' : '#884400';
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.02 + i * 0.7);
+      ctx.fillRect(-sz, -sz, sz * 2, sz * 2);
+      ctx.restore();
+    }
+
+  } else if (w.id === 'shadowsea') {
+    // SHADOW SEA: Rising bioluminescent bubbles, depth pressure rings, sea tendrils
+    ctx.globalCompositeOperation = 'source-over';
+    // Deep pressure gradient from bottom
+    const depthAlpha = (0.06 + Math.sin(t * 0.006) * 0.02) * (explore ? 1.4 : 1);
+    ctx.globalAlpha = depthAlpha;
+    const depthGrad = ctx.createLinearGradient(0, 0, 0, H);
+    depthGrad.addColorStop(0, 'transparent');
+    depthGrad.addColorStop(1, '#003344');
+    ctx.fillStyle = depthGrad;
+    ctx.fillRect(0, 0, W, H);
+    // Expanding pressure rings from center
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    if (PERF.shadowGlow) { ctx.shadowColor = '#00bbaa'; ctx.shadowBlur = 8; }
+    ctx.strokeStyle = '#00ccbb'; ctx.lineWidth = 0.9;
+    for (let i = 0; i < 5; i++) {
+      const phase = ((t * 0.003 + i * 0.22) % 1);
+      const r = phase * Math.max(W, H) * 0.7;
+      ctx.globalAlpha = Math.sin(phase * Math.PI) * (explore ? 0.10 : 0.05);
+      ctx.beginPath(); ctx.arc(W / 2, H * 0.6, r, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    // Rising bioluminescent bubbles
+    ctx.globalCompositeOperation = 'source-over';
+    const bubbleCount = explore ? 50 : 22;
+    const bcolors = ['#00ffee','#00ddcc','#44ffdd','#22eecc','#88ffee'];
+    for (let i = 0; i < bubbleCount; i++) {
+      const phase = ((t * 0.003 + i * 0.29) % 1);
+      const x = ((i * 87.3 + Math.sin(t * 0.012 + i * 0.9) * 22) % W + W) % W;
+      const y = H * 1.05 - phase * (H * 1.12);
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.55 : 0.25);
+      const sz = 1.0 + Math.sin(t * 0.05 + i * 1.3) * 0.6;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = bcolors[i % 5];
+      if (PERF.shadowGlow) { ctx.shadowColor = bcolors[i % 5]; ctx.shadowBlur = 6; }
+      ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+  } else if (w.id === 'netherforge') {
+    // NETHER FORGE: Rising forge sparks, molten horizon, heat-ring pulses
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    // Molten lava horizon at bottom — brighter than ashfields
+    const moltenAlpha = (0.1 + Math.sin(t * 0.009) * 0.035) * (explore ? 1.5 : 1);
+    ctx.globalAlpha = moltenAlpha;
+    const mGrad = ctx.createLinearGradient(0, H * 0.6, 0, H);
+    mGrad.addColorStop(0, 'transparent');
+    mGrad.addColorStop(0.6, '#441100');
+    mGrad.addColorStop(1, '#cc4400');
+    ctx.fillStyle = mGrad;
+    ctx.fillRect(0, H * 0.6, W, H * 0.4);
+    // Heat shimmer arcs from bottom
+    const arcCount = explore ? 6 : 3;
+    for (let i = 0; i < arcCount; i++) {
+      const phase = ((t * 0.004 + i * 0.28) % 1);
+      const arcAlpha = Math.sin(phase * Math.PI) * (explore ? 0.14 : 0.07);
+      ctx.globalAlpha = arcAlpha;
+      ctx.strokeStyle = i % 2 === 0 ? '#ff6600' : '#ff9900';
+      ctx.lineWidth = 2 + i * 0.4;
+      const cx = W * (0.15 + i * 0.16);
+      const r = 70 + i * 35 + phase * 90;
+      ctx.beginPath(); ctx.arc(cx, H + r * 0.2, r, -Math.PI * 0.82, -Math.PI * 0.18); ctx.stroke();
+    }
+    // Forge sparks — faster and denser than ashfields embers
+    ctx.globalCompositeOperation = 'source-over';
+    const sparkCount = explore ? 65 : 28;
+    const sparkColors = ['#ff8800','#ffcc00','#ff4400','#ffaa00','#ffffff'];
+    for (let i = 0; i < sparkCount; i++) {
+      const phase = ((t * 0.007 + i * 0.23) % 1);
+      const x = ((i * 71.3 + Math.sin(t * 0.025 + i * 0.6) * 40) % W + W) % W;
+      const y = H * 1.04 - phase * (H * 1.1);
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.65 : 0.28);
+      const sz = 0.5 + Math.sin(t * 0.07 + i * 2.1) * 0.4;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = sparkColors[i % 5];
+      ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
+    }
+
+  } else if (w.id === 'celestialtomb') {
+    // CELESTIAL TOMB: Collapsing star rings, drifting star fragments, ghost nebula
+    ctx.globalCompositeOperation = 'source-over';
+    // Ghost nebula — faint indigo haze across whole screen
+    const nebulaAlpha = (0.04 + Math.sin(t * 0.005) * 0.016) * (explore ? 1.6 : 1);
+    ctx.globalAlpha = nebulaAlpha;
+    const nGrad = ctx.createRadialGradient(W * 0.3, H * 0.35, 0, W * 0.3, H * 0.35, Math.min(W,H) * 0.55);
+    nGrad.addColorStop(0, 'rgba(150,120,255,0.3)');
+    nGrad.addColorStop(0.5, 'rgba(80,60,180,0.1)');
+    nGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = nGrad; ctx.fillRect(0, 0, W, H);
+    // Collapsing star rings pulsing inward
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    if (PERF.shadowGlow) { ctx.shadowColor = '#9977ff'; ctx.shadowBlur = 12; }
+    ctx.strokeStyle = '#8866ff'; ctx.lineWidth = 1.0;
+    for (let i = 0; i < 5; i++) {
+      const phase = ((t * 0.0025 + i * 0.21) % 1);
+      const r = (1 - phase) * Math.max(W, H) * 0.55 + 20;
+      ctx.globalAlpha = Math.sin(phase * Math.PI) * (explore ? 0.13 : 0.065);
+      ctx.beginPath(); ctx.arc(W * 0.5, H * 0.42, r, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    // Drifting dead star fragments — larger than normal shards
+    ctx.globalCompositeOperation = 'source-over';
+    const fragCount = explore ? 30 : 13;
+    const fragColors = ['#ccbbff','#9988dd','#aaaaff','#ddeeff','#ffffff'];
+    for (let i = 0; i < fragCount; i++) {
+      const wobble = Math.sin(t * 0.005 + i * 1.6) * 35;
+      const x = ((i * 157.4 + wobble) % W + W) % W;
+      const y = ((i * 94.1 + t * 0.04) % H + H) % H;
+      const alpha = 0.06 + Math.sin(t * 0.009 + i * 0.8) * 0.04;
+      const sz = 1.5 + (i % 3) * 0.7;
+      ctx.globalAlpha = alpha * (explore ? 1.8 : 1);
+      ctx.fillStyle = fragColors[i % 5];
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.006 + i * 1.2);
+      ctx.beginPath();
+      ctx.moveTo(0, -sz * 3); ctx.lineTo(sz * 0.8, 0); ctx.lineTo(0, sz * 3); ctx.lineTo(-sz * 0.8, 0);
       ctx.closePath(); ctx.fill();
       ctx.restore();
     }
