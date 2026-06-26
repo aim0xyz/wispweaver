@@ -2019,6 +2019,94 @@ function svgNova(color) {
   </svg>`;
 }
 
+function svgShopHp(color) {
+  const c = color || '#ff6680';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <polygon points="24,8 28,14 35,13 32,20 37,25 30,25 27,32 24,27 21,32 18,25 11,25 16,20 13,13 20,14" fill="${c}" opacity="0.18"/>
+    <polygon points="24,11 27,16 33,15 31,21 35,25 29,25 27,31 24,26 21,31 19,25 13,25 17,21 15,15 21,16" fill="none" stroke="${c}" stroke-width="1.5" opacity="0.55"/>
+    <polygon points="24,14 26,18 30,17 29,21 32,24 28,24 26,29 24,25 22,29 20,24 16,24 19,21 18,17 22,18" fill="${c}" opacity="0.7"/>
+    <circle cx="24" cy="22" r="5" fill="${c}" opacity="0.9"/>
+    <circle cx="22" cy="20" r="2" fill="#fff" opacity="0.45"/>
+  </svg>`;
+}
+function svgShopDmg(color) {
+  const c = color || '#ff9a4d';
+  let beams = '';
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+    const r1 = 7, r2 = i % 2 === 0 ? 20 : 16;
+    beams += `<line x1="${(24+Math.cos(a)*r1).toFixed(1)}" y1="${(24+Math.sin(a)*r1).toFixed(1)}" x2="${(24+Math.cos(a)*r2).toFixed(1)}" y2="${(24+Math.sin(a)*r2).toFixed(1)}" stroke="${c}" stroke-width="${i%2===0?2:1.3}" stroke-linecap="round" opacity="${i%2===0?0.85:0.45}"/>`;
+  }
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <circle cx="24" cy="24" r="20" fill="${c}" opacity="0.07"/>
+    ${beams}
+    <circle cx="24" cy="24" r="7" fill="${c}" opacity="0.25"/>
+    <circle cx="24" cy="24" r="5" fill="${c}" opacity="0.85"/>
+    <circle cx="22" cy="22" r="2.2" fill="#fff" opacity="0.55"/>
+    <circle cx="24" cy="24" r="20" fill="none" stroke="${c}" stroke-width="1" opacity="0.18"/>
+  </svg>`;
+}
+function svgShopSpeed(color) {
+  const c = color || '#88ffcc';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <polyline points="10,28 20,20 30,28" fill="none" stroke="${c}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.28"/>
+    <polyline points="13,36 24,26 35,36" fill="none" stroke="${c}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.55"/>
+    <polyline points="13,20 24,10 35,20" fill="none" stroke="${c}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>
+    <circle cx="24" cy="10" r="2.5" fill="${c}" opacity="0.7"/>
+    <line x1="24" y1="13" x2="24" y2="40" stroke="${c}" stroke-width="1" stroke-dasharray="2 4" opacity="0.3"/>
+  </svg>`;
+}
+function svgShopDash(color) {
+  const c = color || '#66ddff';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <line x1="6"  y1="24" x2="13" y2="24" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+    <line x1="17" y1="24" x2="24" y2="24" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+    <line x1="28" y1="24" x2="35" y2="24" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+    <polyline points="32,17 42,24 32,31" fill="none" stroke="${c}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="42" cy="24" r="3.5" fill="${c}" opacity="0.85"/>
+    <ellipse cx="22" cy="24" rx="8" ry="4" fill="${c}" opacity="0.08" transform="rotate(-10 22 24)"/>
+  </svg>`;
+}
+function svgShopLumina(color) {
+  const c = color || '#ffcc66';
+  let spiral = '';
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const r = 6 + i * 1.1;
+    const a2 = a + 0.55;
+    const r2 = 6 + (i + 1) * 1.1;
+    spiral += `<line x1="${(24+Math.cos(a)*r).toFixed(1)}" y1="${(24+Math.sin(a)*r).toFixed(1)}" x2="${(24+Math.cos(a2)*r2).toFixed(1)}" y2="${(24+Math.sin(a2)*r2).toFixed(1)}" stroke="${c}" stroke-width="1.6" stroke-linecap="round" opacity="${0.3+i*0.05}"/>`;
+  }
+  const dots = [4,8,12,16,20].map(r => {
+    const a = r * 0.42;
+    return `<circle cx="${(24+Math.cos(a)*r).toFixed(1)}" cy="${(24+Math.sin(a)*r).toFixed(1)}" r="1.8" fill="${c}" opacity="${0.8-r*0.02}"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    ${spiral}
+    ${dots}
+    <circle cx="24" cy="24" r="4.5" fill="${c}" opacity="0.9"/>
+    <circle cx="22.5" cy="22.5" r="1.8" fill="#fff" opacity="0.5"/>
+  </svg>`;
+}
+function svgShopRevive(color) {
+  const c = color || '#ffb066';
+  let rays = '';
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const r1 = 10, r2 = 19;
+    rays += `<line x1="${(24+Math.cos(a)*r1).toFixed(1)}" y1="${(24+Math.sin(a)*r1).toFixed(1)}" x2="${(24+Math.cos(a)*r2).toFixed(1)}" y2="${(24+Math.sin(a)*r2).toFixed(1)}" stroke="${c}" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
+  }
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <circle cx="24" cy="24" r="20" fill="${c}" opacity="0.06"/>
+    ${rays}
+    <path d="M24 32 L18 20 Q24 14 30 20 Z" fill="${c}" opacity="0.55"/>
+    <path d="M24 32 L18 20 Q24 14 30 20 Z" fill="none" stroke="${c}" stroke-width="1.5" opacity="0.5"/>
+    <circle cx="24" cy="20" r="5" fill="${c}" opacity="0.8"/>
+    <path d="M20 26 Q18 36 24 40 Q30 36 28 26" fill="${c}" opacity="0.35"/>
+    <circle cx="22" cy="19" r="2" fill="#fff" opacity="0.5"/>
+  </svg>`;
+}
+
 // ─── ICON MAP ───
 const ICON_MAP = {
   flame: svgFlame, sparkle: svgSparkle, prism: svgPrism, echo: svgEcho, apex: svgApex,
@@ -2029,6 +2117,8 @@ const ICON_MAP = {
   starburst: svgStarburst, magnet: svgMagnet, chain: svgChain,
   verdant: svgVerdant, vortex: svgVortex,
   phantom: svgPhantom, nova: svgNova,
+  shop_hp: svgShopHp, shop_dmg: svgShopDmg, shop_speed: svgShopSpeed,
+  shop_dash: svgShopDash, shop_lumina: svgShopLumina, shop_revive: svgShopRevive,
 };
 
 function getIconSVG(name, color) {
@@ -2071,18 +2161,18 @@ const CHARACTERS = [
 
 // ─── UPGRADES ───
 const ALL_UPGRADES = [
-  { id:'range',       icon:'wave',        name:'Reaching Light',desc:'Attacks reach 30% farther',           maxLvl:3, color:'#66ddff' },
-  { id:'faster_atk',  icon:'bolt',        name:'Quick Flame',   desc:'Attack 20% faster',                  maxLvl:4, color:'#ffdd44' },
-  { id:'more_dmg',    icon:'burst',       name:'Bright Ember',  desc:'Damage +25%',                         maxLvl:5, color:'#ff8844' },
-  { id:'extra_shot',  icon:'fork',        name:'Forked Light',  desc:'+1 projectile per attack',            maxLvl:3, color:'#ffaa66' },
-  { id:'longer_trail',icon:'trail',       name:'Lingering Wake',desc:'Trail lasts 40% longer',              maxLvl:3, color:'#66aaff' },
-  { id:'wider_trail', icon:'radiance',    name:'Radiant Path',  desc:'Trail is 50% wider',                 maxLvl:2, color:'#88ddff' },
-  { id:'move_speed',  icon:'wind',        name:'Zephyr Step',   desc:'Move speed +15%',                    maxLvl:3, color:'#88ffcc' },
-  { id:'max_hp',      icon:'heart_flame', name:'Kindled Heart', desc:'Max HP +30',                         maxLvl:4, color:'#ff4466' },
-  { id:'regen',       icon:'ember',       name:'Slow Burn',     desc:'1 HP alle 3s (−0,5s pro Stufe)',     maxLvl:3, color:'#ff8844' },
-  { id:'explode_kill',icon:'starburst',   name:'Sparkburst',    desc:'Killed enemies explode',             maxLvl:2, color:'#ffaa22' },
-  { id:'magnet',      icon:'magnet',      name:'Lumina Pull',   desc:'Attract lumina from further',         maxLvl:3, color:'#ffcc66' },
-  { id:'chain',       icon:'chain',       name:'Chain Ember',   desc:'Attacks chain to 1 extra enemy',      maxLvl:3, color:'#ff8844' },
+  { id:'range',       icon:'wave',        name:'Reaching Light',desc:'Attacks reach 30% farther per level',  maxLvl:8,  color:'#66ddff' },
+  { id:'faster_atk',  icon:'bolt',        name:'Quick Flame',   desc:'Attack speed +20% per level',          maxLvl:6,  color:'#ffdd44' },
+  { id:'more_dmg',    icon:'burst',       name:'Bright Ember',  desc:'Damage +25% per level',                maxLvl:10, color:'#ff8844' },
+  { id:'extra_shot',  icon:'fork',        name:'Forked Light',  desc:'+1 projectile per attack',             maxLvl:6,  color:'#ffaa66' },
+  { id:'longer_trail',icon:'trail',       name:'Lingering Wake',desc:'Trail lasts 40% longer per level',     maxLvl:8,  color:'#66aaff' },
+  { id:'wider_trail', icon:'radiance',    name:'Radiant Path',  desc:'Trail is 50% wider per level',         maxLvl:6,  color:'#88ddff' },
+  { id:'move_speed',  icon:'wind',        name:'Zephyr Step',   desc:'Move speed +15% per level',            maxLvl:8,  color:'#88ffcc' },
+  { id:'max_hp',      icon:'heart_flame', name:'Kindled Heart', desc:'Max HP +30 per level',                 maxLvl:10, color:'#ff4466' },
+  { id:'regen',       icon:'ember',       name:'Slow Burn',     desc:'Regenerate HP faster & more per level',maxLvl:8,  color:'#ff8844' },
+  { id:'explode_kill',icon:'starburst',   name:'Sparkburst',    desc:'Kills explode (bigger each level)',    maxLvl:6,  color:'#ffaa22' },
+  { id:'magnet',      icon:'magnet',      name:'Lumina Pull',   desc:'Attract lumina from further',          maxLvl:8,  color:'#ffcc66' },
+  { id:'chain',       icon:'chain',       name:'Chain Ember',   desc:'Attacks chain to extra enemies',       maxLvl:6,  color:'#ff8844' },
 ];
 
 // ─── DIFFICULTY ───
@@ -2178,14 +2268,14 @@ const POWERUP_KEYS = Object.keys(POWERUPS);
 // ─── LUMINA SHOP (meta-progression) ─── permanent upgrades bought with banked
 // lumina. Levels persist in localStorage; effects apply at the start of a run.
 const SHOP_ITEMS = [
-  { id: 'hp',      name: 'Lebenskern',   desc: '+25 Max-HP pro Stufe',           maxLvl: 8, base: 120, icon: 'heart_flame', color: '#ff6680' },
-  { id: 'dmg',     name: 'Glutkern',     desc: '+8% Schaden pro Stufe',          maxLvl: 8, base: 150, icon: 'burst',       color: '#ff9a4d' },
-  { id: 'speed',   name: 'Windschritt',  desc: '+5% Bewegungstempo pro Stufe',   maxLvl: 6, base: 135, icon: 'wind',        color: '#88ffcc' },
-  { id: 'dashcd',  name: 'Phasenschritt',desc: 'Dash-Abklingzeit −12% pro Stufe',maxLvl: 5, base: 180, icon: 'bolt',        color: '#66ddff' },
-  { id: 'lumina',  name: 'Lichtsog',     desc: '+15% Lumina-Ertrag pro Stufe',   maxLvl: 6, base: 105, icon: 'magnet',      color: '#ffcc66' },
-  { id: 'revive',  name: 'Zweites Licht',desc: '+1 Wiederbelebung pro Stufe',    maxLvl: 3, base: 660, icon: 'ember',       color: '#ffb066' },
+  { id: 'hp',      name: 'Lebenskern',    desc: '+25 Max-HP pro Stufe',          maxLvl: 10, base: 100, icon: 'shop_hp',     color: '#ff6680' },
+  { id: 'dmg',     name: 'Glutkern',      desc: '+8% Schaden pro Stufe',         maxLvl: 10, base: 130, icon: 'shop_dmg',    color: '#ff9a4d' },
+  { id: 'speed',   name: 'Windschritt',   desc: '+5% Bewegungstempo pro Stufe',  maxLvl: 10, base: 115, icon: 'shop_speed',  color: '#88ffcc' },
+  { id: 'dashcd',  name: 'Phasenschritt', desc: 'Dash-Abklingzeit −8% pro Stufe',maxLvl: 10, base: 160, icon: 'shop_dash',   color: '#66ddff' },
+  { id: 'lumina',  name: 'Lichtsog',      desc: '+15% Lumina-Ertrag pro Stufe',  maxLvl: 10, base: 90,  icon: 'shop_lumina', color: '#ffcc66' },
+  { id: 'revive',  name: 'Zweites Licht', desc: '+1 Wiederbelebung pro Stufe',   maxLvl:  5, base: 560, icon: 'shop_revive', color: '#ffb066' },
 ];
-function shopCost(item, lvl) { return Math.round(item.base * Math.pow(2.0, lvl)); }
+function shopCost(item, lvl) { return Math.round(item.base * Math.pow(1.72, lvl)); }
 function getBank() { return parseInt(Store.get('ww_bank') || '0', 10) || 0; }
 function setBank(v) { Store.set('ww_bank', String(Math.max(0, Math.round(v)))); }
 function getShopLevels() { try { return JSON.parse(Store.get('ww_shop') || '{}') || {}; } catch (e) { return {}; } }
@@ -2382,7 +2472,7 @@ class Player {
     this.maxHp += 25 * (sl.hp || 0);
     this.damage *= 1 + 0.08 * (sl.dmg || 0);
     this.speed *= 1 + 0.05 * (sl.speed || 0);
-    this.dashCdMult = 1 - 0.12 * (sl.dashcd || 0);
+    this.dashCdMult = 1 - 0.08 * (sl.dashcd || 0);
     this.revives = sl.revive || 0;
     this.hp = this.maxHp;
   }
@@ -2514,20 +2604,33 @@ class Enemy {
         this.glow = '#88ddff';
         this.score = 18;
         break;
-      case 'boss':
-        this.radius = 32;
-        this.hp = 200 + wave * 40;
+      case 'boss': {
+        this.radius = 34;
+        this.hp = 280 + wave * 32;
         this.maxHp = this.hp;
-        this.speed = 0.8 + wave * 0.02;
-        this.damage = 20 + Math.floor(wave * 1);
-        this.color = '#cc2244';
-        this.glow = '#880022';
-        this.score = 100;
+        this.speed = 0.75 + wave * 0.018;
+        this.damage = 18 + Math.floor(wave * 0.8);
+        this.score = 150;
         this.phaseTimer = 0;
         this.phase = 0;
         this.chargeCooldown = 0;
-        this.chargeAngle = 0;       // direction locked in when the charge telegraphs
+        this.chargeAngle = 0;
+        this.variant = Math.max(0, Math.floor(wave / 10) - 1);
+        const bv = this.variant % 5;
+        const BOSS_VARIANTS = [
+          { name: 'DIE GLOOMSCHWINGE',  color: '#cc2244', glow: '#880022', spikes: 11 },
+          { name: 'DER ASCHENTITAN',    color: '#ff6622', glow: '#cc3300', spikes: 7  },
+          { name: 'DER LEEREBOTE',      color: '#00aadd', glow: '#006688', spikes: 6  },
+          { name: 'DER KRISTALLTYRANN', color: '#cc44ff', glow: '#880088', spikes: 14 },
+          { name: 'DIE EWIGE FINSTERNIS',color:'#ffdd00', glow: '#aa8800', spikes: 9  },
+        ];
+        const bdata = BOSS_VARIANTS[bv];
+        this.color = bdata.color;
+        this.glow  = bdata.glow;
+        this.bossName = bdata.name;
+        this.bossSpikes = bdata.spikes;
         break;
+      }
     }
 
     // Difficulty: scale enemy HP, damage and speed.
@@ -2796,8 +2899,8 @@ function showWaveAnnounce(wave) {
     'The end draws near...',
   ];
   sub.textContent = subs[Math.min(wave - 1, subs.length - 1)];
-  const isBossWave = game.wave % 5 === 0;
-  if (isBossWave) sub.textContent = 'A great darkness awakens...';
+  const isBossWave = game.wave % 10 === 0;
+  if (isBossWave) sub.textContent = 'Eine mächtige Dunkelheit erwacht...';
   sfx(isBossWave ? 'boss' : 'wave');
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), isBossWave ? 2500 : 1500);
@@ -2838,6 +2941,7 @@ function spawnEnemy(type, x, y) {
   game.enemies.push(e);
   // Spawn puff
   spawnParticles(e.x, e.y, e.color, 8, 2, 15, 3);
+  return e;
 }
 
 function spawnParticles(x, y, color, count, speed, life, size) {
@@ -2908,7 +3012,7 @@ function spawnLumina(x, y, count) {
 }
 
 function getEnemyCountForWave(wave) {
-  const base = (wave % 5 === 0) ? 6 + wave : 8 + wave * 2;
+  const base = (wave % 10 === 0) ? 8 + wave : 8 + wave * 2;
   return Math.max(3, Math.round(base * diffMods().count));
 }
 
@@ -3113,7 +3217,7 @@ function _startWave() {
   game.enemiesSpawned = 0;
   game.bossActive = false;
   game._bossSpawned = false;
-  game.bossWave = game.wave % 5 === 0;
+  game.bossWave = game.wave % 10 === 0;
 
   showWaveAnnounce(game.wave);
   game.waveDelay = 90;
@@ -3575,8 +3679,9 @@ function update() {
   // Regen
   if (stats.regen) {
     p.regenTimer++;
-    const interval = Math.max(120, 180 - 30 * (stats.regenLvl - 1));
-    if (p.regenTimer >= interval) { p.regenTimer = 0; p.hp = Math.min(stats.maxHp, p.hp + 1); }
+    const interval = Math.max(90, 180 - 18 * (stats.regenLvl - 1));
+    const healAmt = Math.ceil(stats.regenLvl / 3);
+    if (p.regenTimer >= interval) { p.regenTimer = 0; p.hp = Math.min(stats.maxHp, p.hp + healAmt); }
   }
   
   // ─── CHARACTER PASSIVES ───
@@ -3837,19 +3942,29 @@ function update() {
       game.waveDelay--;
     } else {
       const totalEnemies = getEnemyCountForWave(game.wave);
-      const isBossWave = game.wave % 5 === 0;
+      const isBossWave = game.wave % 10 === 0;
 
-      // ─── BOSS spawns at the start of every 5th wave ───
+      // ─── BOSS spawns at the start of every 10th wave ───
       if (isBossWave && !game._bossSpawned && game.enemiesSpawned === 0 && game.enemies.length === 0) {
-        spawnEnemy('boss');
+        const bossEnemy = spawnEnemy('boss');
         game.bossActive = true;
         game._bossSpawned = true;
         game.enemiesSpawned++;
-        game.screenShake = 16;
-        game.screenFlash = 12;
+        game.screenShake = 20;
+        game.screenFlash = 16;
         game.spawnTimer = Math.max(20, 50 - game.wave * 1.2);
         sfx('boss');
-        showStory('Something vast uncoils from the dark...');
+        const nameEl = document.getElementById('bossName');
+        if (nameEl && bossEnemy) nameEl.textContent = bossEnemy.bossName || 'THE GLOOM INCARNATE';
+        const bossStories = [
+          'Etwas Mächtiges entfaltet sich aus der Dunkelheit...',
+          'Der Aschentitan erwacht — geschmiedet aus kosmischem Feuer.',
+          'Der Leerebote tritt durch die Schwelle zwischen Sein und Nichts.',
+          'Der Kristalltyrann erhebt sich — schöner und tödlicher als je zuvor.',
+          'Die Ewige Finsternis selbst nimmt Gestalt an. Das Ende beginnt.',
+        ];
+        const storyIdx = Math.min(Math.floor(game.wave / 10) - 1, bossStories.length - 1);
+        setTimeout(() => showStory(bossStories[Math.max(0, storyIdx)]), 800);
       }
 
       // First spawn: set initial timer
@@ -3981,49 +4096,105 @@ function update() {
     
     // Boss behavior
     if (e.type === 'boss') {
+      const bv = (e.variant || 0) % 5;
       e.phaseTimer++;
       e.chargeCooldown--;
-      
+
       if (e.phaseTimer > 180) {
         e.phase = (e.phase + 1) % 3;
         e.phaseTimer = 0;
       }
-      
-      // Charge attack — long telegraph, then a committed dash in a FIXED
-      // direction. The boss stays put during the windup and never re-aims, so
-      // you can read it and simply step out of the line.
-      // Available in the melee phases (0 and 1); phase 2 is the ranged volley.
+
+      // All variants: charge attack in melee phases
       if (e.phase !== 2 && e.chargeCooldown <= 0) {
-        e.chargeFlash = 64;            // ~0.55s of clear warning before the dash
-        e.chargeAngle = angleToPlayer; // lock aim at the player's position NOW
-        e.chargeCooldown = 150;        // breathing room between charges
+        e.chargeFlash = 64;
+        e.chargeAngle = angleToPlayer;
+        e.chargeCooldown = 145;
       }
       if (e.chargeFlash > 6 && e.chargeFlash < 34) {
-        // Dash along the locked-in angle, NOT the player's current position.
         e.knockbackX += Math.cos(e.chargeAngle) * 7.5;
         e.knockbackY += Math.sin(e.chargeAngle) * 7.5;
-        spawnParticles(e.x, e.y, '#ff2244', 8, 3, 15, 2);
+        spawnParticles(e.x, e.y, e.color, 8, 3, 15, 2);
       }
 
-      // Phase 2: ranged volley — a fan of slow orbs aimed where you stand NOW,
-      // so you can read it and step out of the way.
       if (e.volleyCooldown === undefined) e.volleyCooldown = 90;
       e.volleyCooldown--;
+
       if (e.phase === 2 && e.volleyCooldown <= 0) {
-        e.volleyCooldown = 110;
-        const shots = 5;
-        const spread = 0.5;   // radians, total fan width is 2*spread
-        for (let s = 0; s < shots; s++) {
-          const a = angleToPlayer + (s / (shots - 1) - 0.5) * 2 * spread;
-          const spd = 3.4;
-          game.enemyProjectiles.push({
-            x: e.x, y: e.y,
-            vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
-            radius: 7, damage: Math.round(e.damage * 0.55),
-            life: 200, color: ENEMY_SHOT.color, glow: ENEMY_SHOT.glow,
-          });
+        if (bv === 0) {
+          // Gloom Incarnate: 5-shot fan
+          e.volleyCooldown = 115;
+          for (let s = 0; s < 5; s++) {
+            const a = angleToPlayer + (s / 4 - 0.5) * 1.0;
+            game.enemyProjectiles.push({ x: e.x, y: e.y,
+              vx: Math.cos(a) * 3.4, vy: Math.sin(a) * 3.4,
+              radius: 7, damage: Math.round(e.damage * 0.55), life: 200,
+              color: ENEMY_SHOT.color, glow: ENEMY_SHOT.glow });
+          }
+        } else if (bv === 1) {
+          // Ashen Titan: 8-shot ring
+          e.volleyCooldown = 130;
+          for (let s = 0; s < 8; s++) {
+            const a = (s / 8) * Math.PI * 2;
+            game.enemyProjectiles.push({ x: e.x, y: e.y,
+              vx: Math.cos(a) * 2.8, vy: Math.sin(a) * 2.8,
+              radius: 8, damage: Math.round(e.damage * 0.45), life: 220,
+              color: '#ff5500', glow: '#cc3300' });
+          }
+        } else if (bv === 2) {
+          // Void Herald: 3-shot spiral + teleport every 10 volleys
+          e.volleyCooldown = 95;
+          if (e._voidSpiralAngle === undefined) e._voidSpiralAngle = 0;
+          for (let s = 0; s < 3; s++) {
+            const a = e._voidSpiralAngle + s * (Math.PI * 2 / 3);
+            game.enemyProjectiles.push({ x: e.x, y: e.y,
+              vx: Math.cos(a) * 4.0, vy: Math.sin(a) * 4.0,
+              radius: 6, damage: Math.round(e.damage * 0.5), life: 190,
+              color: '#00aadd', glow: '#006688' });
+          }
+          e._voidSpiralAngle += 0.72;
+          if (!e._voidTeleCount) e._voidTeleCount = 0;
+          e._voidTeleCount++;
+          if (e._voidTeleCount >= 8 && dToPlayer > 180) {
+            e._voidTeleCount = 0;
+            const ta = angleToPlayer;
+            const td = 140 + Math.random() * 80;
+            e.x = p.x + Math.cos(ta + Math.PI) * td;
+            e.y = p.y + Math.sin(ta + Math.PI) * td;
+            e.x = Math.max(e.radius, Math.min(game.mapW - e.radius, e.x));
+            e.y = Math.max(e.radius, Math.min(game.mapH - e.radius, e.y));
+            spawnParticles(e.x, e.y, '#00ddff', 22, 5, 20, 3);
+            spawnShockwave(e.x, e.y, '#00aacc', e.radius + 40, 20, 4);
+          }
+        } else if (bv === 3) {
+          // Crystal Tyrant: 12-shot crystal ring
+          e.volleyCooldown = 140;
+          for (let s = 0; s < 12; s++) {
+            const a = (s / 12) * Math.PI * 2;
+            game.enemyProjectiles.push({ x: e.x, y: e.y,
+              vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2,
+              radius: 6, damage: Math.round(e.damage * 0.42), life: 200,
+              color: '#cc44ff', glow: '#880088' });
+          }
+        } else {
+          // Eternal Darkness: 10-shot wide fan + 2 backward
+          e.volleyCooldown = 120;
+          for (let s = 0; s < 10; s++) {
+            const a = angleToPlayer + (s / 9 - 0.5) * 1.8;
+            game.enemyProjectiles.push({ x: e.x, y: e.y,
+              vx: Math.cos(a) * 3.6, vy: Math.sin(a) * 3.6,
+              radius: 8, damage: Math.round(e.damage * 0.5), life: 210,
+              color: '#ffdd00', glow: '#aa8800' });
+          }
+          for (let s = 0; s < 2; s++) {
+            const a = angleToPlayer + Math.PI + (s - 0.5) * 0.6;
+            game.enemyProjectiles.push({ x: e.x, y: e.y,
+              vx: Math.cos(a) * 2.5, vy: Math.sin(a) * 2.5,
+              radius: 7, damage: Math.round(e.damage * 0.45), life: 200,
+              color: '#ffdd00', glow: '#aa8800' });
+          }
         }
-        spawnShockwave(e.x, e.y, ENEMY_SHOT.color, e.radius + 24, 16, 3);
+        spawnShockwave(e.x, e.y, e.color, e.radius + 28, 16, 3);
         sfx('hit');
       }
     }
@@ -4464,37 +4635,184 @@ function blobPath(x, y, baseR, lobes, amp, t, seed) {
 
 function drawBoss(e, faceA, t, body) {
   const R = e.radius;
-  // Spiky crown silhouette
+  const bv = (e.variant || 0) % 5;
+  const spikes = e.bossSpikes || 11;
   ctx.shadowColor = e.glow;
-  ctx.shadowBlur = e.hitFlash > 0 ? 50 : 26;
-  ctx.fillStyle = body;
-  ctx.beginPath();
-  const spikes = 11;
-  for (let i = 0; i <= spikes * 2; i++) {
-    const a = (i / (spikes * 2)) * Math.PI * 2 + t * 0.25;
-    const out = i % 2 === 0;
-    const r = R * (out ? 1.16 + Math.sin(t * 2 + i) * 0.05 : 0.9);
-    const px = e.x + Math.cos(a) * r, py = e.y + Math.sin(a) * r;
-    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  ctx.fill();
-  // Dark mantle
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = 'rgba(0,0,0,0.32)';
-  ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.72, 0, Math.PI * 2); ctx.fill();
-  // Molten core
-  const coreP = 0.5 + Math.sin(t * 3) * 0.25;
-  ctx.shadowColor = '#ff3355'; ctx.shadowBlur = 28;
-  ctx.fillStyle = `rgba(255,70,100,${0.55 + coreP * 0.35})`;
-  ctx.beginPath(); ctx.arc(e.x, e.y, R * (0.3 + coreP * 0.08), 0, Math.PI * 2); ctx.fill();
-  // Crown of eyes facing the player
-  ctx.shadowBlur = 0;
-  for (let i = 0; i < 5; i++) {
-    const a = faceA + (i - 2) * 0.42;
-    const ex = e.x + Math.cos(a) * R * 0.52, ey = e.y + Math.sin(a) * R * 0.52;
-    ctx.fillStyle = e.hitFlash > 0 ? '#fff' : '#ff0033';
-    ctx.beginPath(); ctx.arc(ex, ey, 3.6, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = e.hitFlash > 0 ? 55 : 28;
+
+  if (bv === 1) {
+    // ASHEN TITAN — armored hexagonal titan with fire plating
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    for (let i = 0; i <= spikes * 2; i++) {
+      const a = (i / (spikes * 2)) * Math.PI * 2 + t * 0.15;
+      const r = R * (i % 2 === 0 ? 1.22 : 0.82);
+      const px = e.x + Math.cos(a) * r, py = e.y + Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Armor plates
+    ctx.strokeStyle = e.hitFlash > 0 ? '#fff' : '#ffaa44';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(e.x + Math.cos(a) * R * 0.45, e.y + Math.sin(a) * R * 0.45);
+      ctx.lineTo(e.x + Math.cos(a) * R * 0.85, e.y + Math.sin(a) * R * 0.85);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.68, 0, Math.PI * 2); ctx.fill();
+    const cp = 0.5 + Math.sin(t * 2.8) * 0.28;
+    ctx.shadowColor = '#ff5500'; ctx.shadowBlur = 32;
+    ctx.fillStyle = `rgba(255,${Math.floor(100 + cp * 80)},0,${0.6 + cp * 0.3})`;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * (0.28 + cp * 0.09), 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    for (let i = 0; i < 3; i++) {
+      const a = faceA + (i - 1) * 0.55;
+      const ex = e.x + Math.cos(a) * R * 0.48, ey = e.y + Math.sin(a) * R * 0.48;
+      ctx.fillStyle = e.hitFlash > 0 ? '#fff' : '#ffaa00';
+      ctx.beginPath(); ctx.arc(ex, ey, 4.2, 0, Math.PI * 2); ctx.fill();
+    }
+
+  } else if (bv === 2) {
+    // VOID HERALD — ghostly ring-being with orbiting shards
+    const pulse = 1 + Math.sin(t * 1.8) * 0.06;
+    // outer void ring
+    ctx.strokeStyle = body; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 1.18 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = body; ctx.globalAlpha = 0.18;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 1.18 * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // middle ring
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = body; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.45;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.72, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    // solid core
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.42 * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // orbiting void shards
+    for (let i = 0; i < spikes; i++) {
+      const a = t * 0.7 + i * (Math.PI * 2 / spikes);
+      const sx = e.x + Math.cos(a) * R * 0.9, sy = e.y + Math.sin(a) * R * 0.9;
+      ctx.save(); ctx.translate(sx, sy); ctx.rotate(a + t);
+      ctx.fillStyle = e.hitFlash > 0 ? '#ffffff' : '#44ddff';
+      if (PERF.shadowGlow) { ctx.shadowColor = '#00aacc'; ctx.shadowBlur = 10; }
+      ctx.beginPath();
+      ctx.moveTo(0, -5); ctx.lineTo(2.5, 0); ctx.lineTo(0, 5); ctx.lineTo(-2.5, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    ctx.shadowBlur = 0;
+    // single large eye
+    ctx.fillStyle = e.hitFlash > 0 ? '#fff' : '#00ffff';
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.14, 0, Math.PI * 2); ctx.fill();
+
+  } else if (bv === 3) {
+    // CRYSTAL TYRANT — jagged crystal spikes, many and sharp
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    for (let i = 0; i <= spikes * 2; i++) {
+      const a = (i / (spikes * 2)) * Math.PI * 2 + t * 0.2;
+      const out = i % 2 === 0;
+      const rOuter = R * (1.35 + Math.sin(t * 1.5 + i * 0.5) * 0.08);
+      const rInner = R * 0.7;
+      const r = out ? rOuter : rInner;
+      const px = e.x + Math.cos(a) * r, py = e.y + Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Crystal facets
+    ctx.strokeStyle = e.hitFlash > 0 ? '#fff' : '#ff88ff';
+    ctx.lineWidth = 1.2; ctx.globalAlpha = 0.45;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(e.x, e.y);
+      ctx.lineTo(e.x + Math.cos(a) * R * 0.8, e.y + Math.sin(a) * R * 0.8);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.65, 0, Math.PI * 2); ctx.fill();
+    const cp = 0.5 + Math.sin(t * 4) * 0.28;
+    ctx.shadowColor = '#dd00ff'; ctx.shadowBlur = 30;
+    ctx.fillStyle = `rgba(200,${Math.floor(40 + cp * 60)},255,${0.6 + cp * 0.3})`;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * (0.27 + cp * 0.08), 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    for (let i = 0; i < 7; i++) {
+      const a = faceA + (i - 3) * 0.32;
+      const ex = e.x + Math.cos(a) * R * 0.46, ey = e.y + Math.sin(a) * R * 0.46;
+      ctx.fillStyle = e.hitFlash > 0 ? '#fff' : '#ff00ff';
+      ctx.beginPath(); ctx.arc(ex, ey, 2.8, 0, Math.PI * 2); ctx.fill();
+    }
+
+  } else if (bv === 4) {
+    // ETERNAL DARKNESS — multi-ring golden star with gravitational pull aura
+    const pulse = 1 + Math.sin(t * 1.4) * 0.06;
+    // outer slow-rotating ring
+    ctx.strokeStyle = body; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.28;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 1.6 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    for (let i = 0; i <= spikes * 2; i++) {
+      const a = (i / (spikes * 2)) * Math.PI * 2 + t * 0.3;
+      const r = R * (i % 2 === 0 ? 1.2 + Math.sin(t * 2 + i) * 0.06 : 0.75);
+      const px = e.x + Math.cos(a) * r, py = e.y + Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    // golden inner ring
+    ctx.strokeStyle = e.hitFlash > 0 ? '#fff' : '#ffee88';
+    ctx.lineWidth = 2; ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.65, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.6, 0, Math.PI * 2); ctx.fill();
+    const cp = 0.5 + Math.sin(t * 3.5) * 0.28;
+    ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 36;
+    ctx.fillStyle = `rgba(255,${Math.floor(180 + cp * 60)},0,${0.65 + cp * 0.28})`;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * (0.32 + cp * 0.09), 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    for (let i = 0; i < 5; i++) {
+      const a = t * 1.1 + i * (Math.PI * 2 / 5);
+      const ex = e.x + Math.cos(a) * R * 0.5, ey = e.y + Math.sin(a) * R * 0.5;
+      ctx.fillStyle = e.hitFlash > 0 ? '#fff' : '#ffee00';
+      ctx.beginPath(); ctx.arc(ex, ey, 3.8, 0, Math.PI * 2); ctx.fill();
+    }
+
+  } else {
+    // VARIANT 0: GLOOM INCARNATE — default spiked crown
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    for (let i = 0; i <= spikes * 2; i++) {
+      const a = (i / (spikes * 2)) * Math.PI * 2 + t * 0.25;
+      const out = i % 2 === 0;
+      const r = R * (out ? 1.16 + Math.sin(t * 2 + i) * 0.05 : 0.9);
+      const px = e.x + Math.cos(a) * r, py = e.y + Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * 0.72, 0, Math.PI * 2); ctx.fill();
+    const coreP = 0.5 + Math.sin(t * 3) * 0.25;
+    ctx.shadowColor = '#ff3355'; ctx.shadowBlur = 28;
+    ctx.fillStyle = `rgba(255,70,100,${0.55 + coreP * 0.35})`;
+    ctx.beginPath(); ctx.arc(e.x, e.y, R * (0.3 + coreP * 0.08), 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    for (let i = 0; i < 5; i++) {
+      const a = faceA + (i - 2) * 0.42;
+      const ex = e.x + Math.cos(a) * R * 0.52, ey = e.y + Math.sin(a) * R * 0.52;
+      ctx.fillStyle = e.hitFlash > 0 ? '#fff' : '#ff0033';
+      ctx.beginPath(); ctx.arc(ex, ey, 3.6, 0, Math.PI * 2); ctx.fill();
+    }
   }
 }
 
@@ -4828,98 +5146,237 @@ function drawWorldEnv(w, t, mode) {
   ctx.save();
   const explore = mode === 'explore';
 
-  if (w.id === 'ashfields') {
-    // Rising fire embers
+  if (w.id === 'gloomwood') {
+    // GLOOMWOOD: Drifting spores + ghostly shadow tendrils from screen edges
+    ctx.globalCompositeOperation = 'source-over';
+    // Shadow tendrils
+    const tendCount = explore ? 6 : 3;
+    for (let i = 0; i < tendCount; i++) {
+      const baseX = (i / tendCount) * W + Math.sin(t * 0.008 + i * 2.1) * 28;
+      const sway = Math.sin(t * 0.012 + i * 1.3) * 22;
+      const alpha = (0.04 + Math.sin(t * 0.015 + i * 0.9) * 0.025) * (explore ? 1.6 : 1);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#5522aa';
+      ctx.lineWidth = 3 + Math.sin(t * 0.009 + i) * 1.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(baseX, H);
+      ctx.bezierCurveTo(baseX + sway, H * 0.7, baseX - sway * 0.6, H * 0.4, baseX + sway * 0.3, H * 0.1);
+      ctx.stroke();
+    }
+    // Drifting spores
+    const sporeCount = explore ? 50 : 24;
+    for (let i = 0; i < sporeCount; i++) {
+      const wobble = Math.sin(t * 0.007 + i * 1.2) * 30;
+      const x = ((i * 78.4 + wobble + t * 0.12) % W + W) % W;
+      const y = ((i * 129.7 - t * 0.07) % H + H) % H;
+      const alpha = (0.07 + Math.sin(t * 0.013 + i * 0.9) * 0.05) * (explore ? 2.0 : 1);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = i % 3 === 0 ? '#9955cc' : i % 3 === 1 ? '#7733aa' : '#cc88ff';
+      if (PERF.shadowGlow) { ctx.shadowColor = '#9955cc'; ctx.shadowBlur = 8; }
+      ctx.beginPath(); ctx.arc(x, y, 1.8 + Math.sin(t * 0.02 + i) * 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    // Pulsing planetary shadow in top corner
+    const psAlpha = (0.04 + Math.sin(t * 0.006) * 0.018) * (explore ? 1.5 : 1);
+    ctx.globalAlpha = psAlpha;
+    const grad = ctx.createRadialGradient(-60, -60, 40, -60, -60, 280);
+    grad.addColorStop(0, '#220033');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W * 0.55, H * 0.55);
+
+  } else if (w.id === 'ashfields') {
+    // ASHFIELDS: Rising embers + solar flare arcs + lava horizon glow
     ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
-    const count = explore ? 48 : 22;
-    const colors = ['#ff6622','#ffaa44','#ff3300','#ff8800'];
+    // Lava horizon glow at bottom
+    const horizonAlpha = (0.06 + Math.sin(t * 0.008) * 0.025) * (explore ? 1.4 : 1);
+    ctx.globalAlpha = horizonAlpha;
+    const hgrad = ctx.createLinearGradient(0, H * 0.7, 0, H);
+    hgrad.addColorStop(0, 'transparent');
+    hgrad.addColorStop(1, '#ff3300');
+    ctx.fillStyle = hgrad;
+    ctx.fillRect(0, H * 0.7, W, H * 0.3);
+    // Solar flare arcs
+    const arcCount = explore ? 5 : 2;
+    for (let i = 0; i < arcCount; i++) {
+      const phase = ((t * 0.003 + i * 0.37) % 1);
+      const arcAlpha = Math.sin(phase * Math.PI) * (explore ? 0.12 : 0.06);
+      ctx.globalAlpha = arcAlpha;
+      ctx.strokeStyle = i % 2 === 0 ? '#ff5500' : '#ffaa00';
+      ctx.lineWidth = 2.5 + i * 0.5;
+      ctx.lineCap = 'round';
+      const cx = W * (0.2 + i * 0.18);
+      const r = 60 + i * 28 + phase * 80;
+      ctx.beginPath();
+      ctx.arc(cx, H + r * 0.15, r, -Math.PI * 0.85, -Math.PI * 0.15);
+      ctx.stroke();
+    }
+    // Rising fire embers
+    const count = explore ? 55 : 26;
+    const colors = ['#ff6622','#ffaa44','#ff3300','#ff8800','#ffcc00'];
     for (let i = 0; i < count; i++) {
       const phase = ((t * 0.0045 + i * 0.34) % 1);
-      const x = (i * 97.3 + Math.sin(t * 0.018 + i * 0.7) * 22) % W;
-      const y = H * 1.06 - phase * (H * 1.12);
-      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.55 : 0.28);
-      const sz = 0.8 + Math.sin(t * 0.04 + i * 1.5) * 0.6;
+      const x = ((i * 97.3 + Math.sin(t * 0.018 + i * 0.7) * 26) % W + W) % W;
+      const y = H * 1.06 - phase * (H * 1.14);
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.6 : 0.3);
+      const sz = 0.7 + Math.sin(t * 0.04 + i * 1.5) * 0.55;
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = colors[i % 4];
+      ctx.fillStyle = colors[i % 5];
       ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
     }
 
   } else if (w.id === 'voidrift') {
-    // Expanding void ripples from screen center
+    // VOIDRIFT: Black hole gravity lens + expanding ripples + void shards
     ctx.globalCompositeOperation = 'source-over';
+    // Black hole lens in center
+    const bhAlpha = (0.055 + Math.sin(t * 0.01) * 0.02) * (explore ? 1.5 : 1);
+    ctx.globalAlpha = bhAlpha;
+    const bhGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.min(W,H) * 0.38);
+    bhGrad.addColorStop(0, 'rgba(0,0,0,0.7)');
+    bhGrad.addColorStop(0.35, 'rgba(0,20,30,0.25)');
+    bhGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = bhGrad;
+    ctx.fillRect(0, 0, W, H);
+    // Accretion disk arcs
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    const diskCount = explore ? 4 : 2;
+    for (let i = 0; i < diskCount; i++) {
+      const diskAlpha = (0.07 + Math.sin(t * 0.007 + i * 0.8) * 0.04) * (explore ? 1.5 : 1);
+      ctx.globalAlpha = diskAlpha;
+      ctx.strokeStyle = i % 2 === 0 ? '#00ccee' : '#0088bb';
+      ctx.lineWidth = 1.5 - i * 0.2;
+      const r = (55 + i * 28) + Math.sin(t * 0.005 + i) * 8;
+      const startA = t * (0.006 + i * 0.002);
+      ctx.beginPath(); ctx.arc(W/2, H/2, r, startA, startA + Math.PI * 1.4); ctx.stroke();
+      ctx.beginPath(); ctx.arc(W/2, H/2, r + 4, startA + Math.PI, startA + Math.PI * 2.2); ctx.stroke();
+    }
+    // Expanding ripples
     if (PERF.shadowGlow) { ctx.shadowColor = '#00aacc'; ctx.shadowBlur = 10; }
-    ctx.strokeStyle = '#00ccee';
-    ctx.lineWidth = 1.2;
-    for (let i = 0; i < 5; i++) {
-      const phase = ((t * 0.005 + i * 0.22) % 1);
-      const r = phase * Math.max(W, H) * 0.74;
-      ctx.globalAlpha = Math.sin(phase * Math.PI) * (explore ? 0.13 : 0.07);
+    ctx.strokeStyle = '#00ccee'; ctx.lineWidth = 1.1;
+    for (let i = 0; i < 6; i++) {
+      const phase = ((t * 0.005 + i * 0.18) % 1);
+      const r = phase * Math.max(W, H) * 0.8;
+      ctx.globalAlpha = Math.sin(phase * Math.PI) * (explore ? 0.12 : 0.06);
       ctx.beginPath(); ctx.arc(W/2, H/2, r, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.shadowBlur = 0;
     // Drifting void shards
-    const shardCount = explore ? 18 : 8;
+    const shardCount = explore ? 22 : 10;
     for (let i = 0; i < shardCount; i++) {
       const wobble = Math.sin(t * 0.007 + i * 1.4) * 28;
-      const x = (i * 143.6 + wobble) % W;
+      const x = ((i * 143.6 + wobble) % W + W) % W;
       const y = ((i * 88.3 + t * 0.06) % H + H) % H;
       ctx.globalAlpha = 0.05 + Math.sin(t * 0.012 + i * 0.8) * 0.04;
-      ctx.fillStyle = '#44ddff';
+      ctx.fillStyle = i % 2 === 0 ? '#44ddff' : '#0088bb';
       ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.01 + i);
-      ctx.fillRect(-1, -7, 2, 14);
+      ctx.fillRect(-1.2, -9, 2.4, 18);
       ctx.restore();
     }
 
   } else if (w.id === 'crystalmire') {
-    // Falling prismatic diamond shards
+    // CRYSTALMIRE: Rotating crystal lattice formations + falling shards + prismatic refraction
+    ctx.globalCompositeOperation = 'source-over';
+    // Crystal lattice structures in corners
+    const latticeAlpha = (0.05 + Math.sin(t * 0.008) * 0.02) * (explore ? 1.5 : 1);
+    const corners = [[0.08, 0.1], [0.92, 0.1], [0.08, 0.9], [0.92, 0.9]];
+    const visCorners = explore ? corners : corners.slice(0,2);
+    for (const [cx, cy] of visCorners) {
+      ctx.globalAlpha = latticeAlpha;
+      ctx.strokeStyle = '#cc44ff';
+      ctx.lineWidth = 1;
+      const lcx = cx * W, lcy = cy * H;
+      const rot = t * 0.004 + cx * 3;
+      ctx.save(); ctx.translate(lcx, lcy); ctx.rotate(rot);
+      for (let r = 18; r <= 55; r += 18) {
+        ctx.globalAlpha = latticeAlpha * (1 - r / 80);
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+        for (let k = 0; k < 6; k++) {
+          const a = k / 6 * Math.PI * 2;
+          ctx.beginPath(); ctx.moveTo(Math.cos(a)*r*0.55, Math.sin(a)*r*0.55);
+          ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    // Prismatic background sheen
     ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
-    const count = explore ? 32 : 14;
-    const colors = ['#ee88ff','#ffaaff','#cc66ff','#ff99ee'];
+    ctx.globalAlpha = (0.03 + Math.sin(t * 0.011) * 0.015) * (explore ? 1.4 : 1);
+    const pgrad = ctx.createLinearGradient(0, 0, W, H);
+    const hue = (t * 0.3) % 360;
+    pgrad.addColorStop(0, `hsla(${hue},80%,65%,0.6)`);
+    pgrad.addColorStop(0.5, `hsla(${(hue+120)%360},80%,65%,0.2)`);
+    pgrad.addColorStop(1, `hsla(${(hue+240)%360},80%,65%,0.6)`);
+    ctx.fillStyle = pgrad; ctx.fillRect(0, 0, W, H);
+    // Falling prismatic diamond shards
+    const count = explore ? 38 : 16;
+    const colors = ['#ee88ff','#ffaaff','#cc66ff','#ff99ee','#aa55ff'];
     for (let i = 0; i < count; i++) {
-      const phase = ((t * 0.0028 + i * 0.41) % 1);
+      const phase = ((t * 0.003 + i * 0.41) % 1);
       const x = (i * 113.7 + 40) % W;
       const y = phase * (H + 55) - 27;
-      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.48 : 0.22);
-      const sz = 1.5 + Math.sin(t * 0.04 + i) * 0.9;
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.52 : 0.24);
+      const sz = 1.5 + Math.sin(t * 0.04 + i) * 1.0;
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = colors[i % 4];
+      ctx.fillStyle = colors[i % 5];
       ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.015 + i * 0.5);
       ctx.beginPath();
-      ctx.moveTo(0, -sz * 3.2); ctx.lineTo(sz, 0); ctx.lineTo(0, sz * 3.2); ctx.lineTo(-sz, 0);
+      ctx.moveTo(0, -sz * 3.5); ctx.lineTo(sz, 0); ctx.lineTo(0, sz * 3.5); ctx.lineTo(-sz, 0);
       ctx.closePath(); ctx.fill();
       ctx.restore();
     }
 
-  } else if (w.id === 'gloomwood') {
-    // Drifting spores — slow floating purple motes
-    ctx.globalCompositeOperation = 'source-over';
-    const count = explore ? 40 : 20;
-    for (let i = 0; i < count; i++) {
-      const wobble = Math.sin(t * 0.007 + i * 1.2) * 30;
-      const x = (i * 78.4 + wobble + t * 0.12) % W;
-      const y = ((i * 129.7 - t * 0.07) % H + H) % H;
-      const alpha = (0.07 + Math.sin(t * 0.013 + i * 0.9) * 0.05) * (explore ? 1.9 : 1);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = i % 2 === 0 ? '#9955cc' : '#7733aa';
-      if (PERF.shadowGlow) { ctx.shadowColor = '#9955cc'; ctx.shadowBlur = 6; }
-      ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
   } else if (w.id === 'eternal') {
-    // Golden rain — angled falling streaks
+    // ETERNAL DARKNESS: Supernova wisps + golden starfall + radiant corona
+    ctx.globalCompositeOperation = 'source-over';
+    // Radiant corona in center
+    const coronaAlpha = (0.04 + Math.sin(t * 0.007) * 0.02) * (explore ? 1.6 : 1);
+    ctx.globalAlpha = coronaAlpha;
+    const cGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.min(W,H) * 0.42);
+    cGrad.addColorStop(0, 'rgba(255,200,0,0.22)');
+    cGrad.addColorStop(0.4, 'rgba(255,120,0,0.08)');
+    cGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = cGrad; ctx.fillRect(0, 0, W, H);
+    // Rotating corona rays
     ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
-    const count = explore ? 55 : 26;
-    const colors = ['#ffdd44','#ffcc00','#ffe877','#ffaa00'];
-    for (let i = 0; i < count; i++) {
-      const phase = ((t * 0.0055 + i * 0.28) % 1);
-      const x = (i * 89.1 + Math.sin(t * 0.009 + i * 0.6) * 16) % W;
+    const rayCount = explore ? 12 : 6;
+    for (let i = 0; i < rayCount; i++) {
+      const a = (i / rayCount) * Math.PI * 2 + t * 0.004;
+      const rayAlpha = (0.03 + Math.sin(t * 0.011 + i * 0.8) * 0.02) * (explore ? 1.5 : 1);
+      ctx.globalAlpha = rayAlpha;
+      ctx.strokeStyle = i % 2 === 0 ? '#ffdd44' : '#ffaa00';
+      ctx.lineWidth = explore ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(W/2 + Math.cos(a) * 30, H/2 + Math.sin(a) * 30);
+      ctx.lineTo(W/2 + Math.cos(a) * (100 + Math.sin(t * 0.013 + i) * 40), H/2 + Math.sin(a) * (100 + Math.sin(t * 0.013 + i) * 40));
+      ctx.stroke();
+    }
+    // Cosmic nebula wisps drifting through
+    const wispCount = explore ? 8 : 4;
+    for (let i = 0; i < wispCount; i++) {
+      const wx = ((i * 193.4 + Math.sin(t * 0.006 + i * 0.8) * 50 + t * 0.08) % W + W) % W;
+      const wy = ((i * 137.7 + Math.cos(t * 0.007 + i * 1.1) * 35) % H + H) % H;
+      const wAlpha = (0.04 + Math.sin(t * 0.014 + i * 0.7) * 0.025) * (explore ? 1.5 : 1);
+      ctx.globalAlpha = wAlpha;
+      const wGrad = ctx.createRadialGradient(wx, wy, 0, wx, wy, 45 + i * 12);
+      wGrad.addColorStop(0, '#ffdd44');
+      wGrad.addColorStop(0.5, '#ff8800');
+      wGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = wGrad;
+      ctx.beginPath(); ctx.arc(wx, wy, 45 + i * 12, 0, Math.PI * 2); ctx.fill();
+    }
+    // Golden starfall rain
+    const rainCount = explore ? 65 : 30;
+    const rcolors = ['#ffdd44','#ffcc00','#ffe877','#ffaa00','#ffffff'];
+    for (let i = 0; i < rainCount; i++) {
+      const phase = ((t * 0.006 + i * 0.26) % 1);
+      const x = ((i * 89.1 + Math.sin(t * 0.009 + i * 0.6) * 18) % W + W) % W;
       const y = phase * (H + 80) - 40;
-      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.52 : 0.28);
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.55 : 0.28);
       ctx.globalAlpha = alpha;
-      ctx.strokeStyle = colors[i % 4];
-      ctx.lineWidth = 0.9;
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 2.5, y - 16); ctx.stroke();
+      ctx.strokeStyle = rcolors[i % 5];
+      ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 3, y - 18); ctx.stroke();
     }
   }
 
