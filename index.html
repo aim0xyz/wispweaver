@@ -1510,7 +1510,24 @@
 // ═══════════════════════════════════════════════════════════════
 // WISPWEAVER — Echoes of Light
 // ═══════════════════════════════════════════════════════════════
-const BUILD = 'v11 · AAA Polish';
+const BUILD = 'v12 · Mobile Perf';
+
+// One-time capability tier: mobile devices skip the most expensive GPU passes
+// (additive blending, per-particle shadowBlur, radial gradients per frame).
+const PERF = (() => {
+  const mobile = navigator.maxTouchPoints > 1 && window.innerWidth < 1024;
+  return {
+    mobile,
+    starCount:   mobile ? 55 : 160,   // fewer stars
+    sparkle:     !mobile,              // cross-hair shimmer on bright stars
+    hexGrid:     !mobile,              // background grid (many arc() calls)
+    nebulaCount: mobile ? 1 : 3,      // drifting nebula layers
+    groundPool:  !mobile,             // radial ground-light gradient per frame
+    addBlend:    !mobile,             // 'lighter' composite passes
+    shadowGlow:  !mobile,             // particle / trail shadowBlur
+    echoRing:    !mobile,             // shockwave inner echo ring
+  };
+})();
 
 // Crash catcher for OUR code only. Editor live-preview tools inject a
 // cross-origin auto-reload script; when that errors the browser reports an
@@ -2580,7 +2597,8 @@ function spawnEnemy(type, x, y) {
 }
 
 function spawnParticles(x, y, color, count, speed, life, size) {
-  for (let i = 0; i < count; i++) {
+  const cap = PERF.mobile ? Math.ceil(count * 0.5) : count;
+  for (let i = 0; i < cap; i++) {
     game.particles.push(new Particle(x, y, color, speed, life, size));
   }
 }
@@ -4184,7 +4202,7 @@ function render() {
   }
 
   // Subtle hex-grid floor — gives the arena a distinct sense of place
-  {
+  if (PERF.hexGrid) {
     const gs = 52;
     const camX = game.mode === 'explore' ? Math.round(game.camera.x) % gs : 0;
     const camY = game.mode === 'explore' ? Math.round(game.camera.y) % gs : 0;
@@ -4211,7 +4229,7 @@ function render() {
   if (!game._nebula) {
     game._nebula = [];
     const tints = ['#3a2a66', '#27406b', '#5a2a55'];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < PERF.nebulaCount; i++) {
       game._nebula.push({
         x: Math.random() * W, y: Math.random() * H,
         r: Math.max(W, H) * (0.28 + Math.random() * 0.18),
@@ -4222,7 +4240,7 @@ function render() {
       });
     }
   }
-  ctx.globalCompositeOperation = 'lighter';
+  if (PERF.addBlend) ctx.globalCompositeOperation = 'lighter';
   for (const n of game._nebula) {
     const pxN = game.mode === 'explore' ? game.camera.x * n.depth : 0;
     const pyN = game.mode === 'explore' ? game.camera.y * n.depth : 0;
@@ -4246,7 +4264,7 @@ function render() {
   if (!game._stars) {
     game._stars = [];
     const starColors = ['#ffffff','#ffe8cc','#cce0ff','#ffeedd'];
-    for (let i = 0; i < 160; i++) {
+    for (let i = 0; i < PERF.starCount; i++) {
       game._stars.push({
         x: Math.random() * W, y: Math.random() * H,
         r: 0.4 + Math.random() * 2.0,
@@ -4275,7 +4293,7 @@ function render() {
     ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
     ctx.fill();
     // Sparkle cross for larger stars
-    if (s.sparkle && s.r > 1.2) {
+    if (PERF.sparkle && s.sparkle && s.r > 1.2) {
       const crossLen = s.r * 3.5 * (0.7 + 0.3 * Math.sin(game.gameTime * 0.025 + s.phase));
       ctx.globalAlpha = twinkle * 0.55;
       ctx.strokeStyle = s.color;
@@ -4297,7 +4315,7 @@ function render() {
   const p = game.player;
 
   // Dynamic ground light pool — the wisp illuminates the floor beneath it
-  {
+  if (PERF.groundPool) {
     const px = game.mode === 'explore' ? p.x - game.camera.x : p.x;
     const py = game.mode === 'explore' ? p.y - game.camera.y : p.y;
     const poolR = 220 + Math.sin(game.gameTime * 0.035) * 24;
@@ -4334,13 +4352,15 @@ function render() {
     const r = orb.radius * pulse;
     ctx.save();
     // Outer glow halo
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = alpha * 0.4;
-    ctx.fillStyle = '#ffcc44';
-    ctx.beginPath(); ctx.arc(orb.x, orb.y, r * 3.5, 0, Math.PI * 2); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = alpha * 0.4;
+      ctx.fillStyle = '#ffcc44';
+      ctx.beginPath(); ctx.arc(orb.x, orb.y, r * 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     ctx.globalAlpha = alpha;
-    ctx.shadowColor = '#ffcc44'; ctx.shadowBlur = 14;
+    ctx.shadowColor = '#ffcc44'; ctx.shadowBlur = PERF.shadowGlow ? 14 : 0;
     ctx.fillStyle = '#ffd86a';
     ctx.beginPath(); ctx.arc(orb.x, orb.y, r, 0, Math.PI * 2); ctx.fill();
     // Bright specular
@@ -4363,18 +4383,20 @@ function render() {
     ctx.save();
     ctx.globalAlpha = fade;
     // Outer glow halo
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = fade * 0.35;
-    const puHalo = ctx.createRadialGradient(px, py, 4, px, py, 28);
-    puHalo.addColorStop(0, def.color);
-    puHalo.addColorStop(1, 'transparent');
-    ctx.fillStyle = puHalo;
-    ctx.beginPath(); ctx.arc(px, py, 28, 0, Math.PI * 2); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = fade * 0.35;
+      const puHalo = ctx.createRadialGradient(px, py, 4, px, py, 28);
+      puHalo.addColorStop(0, def.color);
+      puHalo.addColorStop(1, 'transparent');
+      ctx.fillStyle = puHalo;
+      ctx.beginPath(); ctx.arc(px, py, 28, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     // Rotating dashed ring
     ctx.globalAlpha = fade;
     ctx.strokeStyle = def.color; ctx.lineWidth = 1.8;
-    ctx.shadowColor = def.glow; ctx.shadowBlur = 14;
+    ctx.shadowColor = def.glow; ctx.shadowBlur = PERF.shadowGlow ? 14 : 0;
     ctx.save();
     ctx.translate(px, py); ctx.rotate(spinT);
     ctx.setLineDash([5, 8]);
@@ -4383,7 +4405,7 @@ function render() {
     ctx.restore();
     // Core
     ctx.fillStyle = def.color;
-    ctx.shadowColor = def.glow; ctx.shadowBlur = 22;
+    ctx.shadowColor = def.glow; ctx.shadowBlur = PERF.shadowGlow ? 22 : 0;
     ctx.beginPath(); ctx.arc(px, py, 10, 0, Math.PI * 2); ctx.fill();
     // Inner bright spec
     ctx.fillStyle = '#ffffff'; ctx.globalAlpha = fade * 0.8;
@@ -4406,21 +4428,23 @@ function render() {
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    // Outer glow pass (lighter blend)
-    ctx.globalCompositeOperation = 'lighter';
-    for (let ti = 1; ti < game.trail.length; ti++) {
-      const tf = ti / game.trail.length;
-      const alpha = tf * tf * (game.mode === 'explore' ? 0.28 : 0.14);
-      ctx.globalAlpha = alpha;
-      ctx.strokeStyle = p.glow;
-      ctx.lineWidth = trailW * tf * 2.2;
-      ctx.shadowColor = p.glow; ctx.shadowBlur = 0;
-      ctx.beginPath();
-      ctx.moveTo(game.trail[ti-1].x, game.trail[ti-1].y);
-      ctx.lineTo(game.trail[ti].x, game.trail[ti].y);
-      ctx.stroke();
+    // Outer glow pass (lighter blend) — desktop only
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      for (let ti = 1; ti < game.trail.length; ti++) {
+        const tf = ti / game.trail.length;
+        const alpha = tf * tf * (game.mode === 'explore' ? 0.28 : 0.14);
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = p.glow;
+        ctx.lineWidth = trailW * tf * 2.2;
+        ctx.shadowColor = p.glow; ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(game.trail[ti-1].x, game.trail[ti-1].y);
+        ctx.lineTo(game.trail[ti].x, game.trail[ti].y);
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
     }
-    ctx.globalCompositeOperation = 'source-over';
     // Core ribbon
     for (let ti = 1; ti < game.trail.length; ti++) {
       const tf = ti / game.trail.length;
@@ -4493,7 +4517,7 @@ function render() {
       // Fill
       if (hpFrac > 0) {
         const barColor = e.type === 'boss' ? '#ff3344' : '#ff7744';
-        ctx.shadowColor = barColor; ctx.shadowBlur = 8;
+        ctx.shadowColor = barColor; ctx.shadowBlur = PERF.shadowGlow ? 8 : 0;
         ctx.fillStyle = barColor;
         roundRectPath(bx, by, barW * hpFrac, barH, 2); ctx.fill();
         ctx.shadowBlur = 0;
@@ -4514,8 +4538,7 @@ function render() {
         const tf = ti / proj.trail.length;
         ctx.globalAlpha = tf * tf * 0.7;
         ctx.strokeStyle = proj.color;
-        ctx.shadowColor = proj.glow;
-        ctx.shadowBlur = 14 * tf;
+        if (PERF.shadowGlow) { ctx.shadowColor = proj.glow; ctx.shadowBlur = 14 * tf; }
         ctx.lineWidth = proj.radius * 2.2 * tf;
         ctx.beginPath();
         ctx.moveTo(proj.trail[ti-1].x, proj.trail[ti-1].y);
@@ -4532,14 +4555,16 @@ function render() {
     ctx.beginPath();
     ctx.arc(proj.x, proj.y, proj.radius * pulseBright, 0, Math.PI * 2);
     ctx.fill();
-    // Outer halo ring (lighten blend for glow feel)
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = proj.glow;
-    ctx.beginPath();
-    ctx.arc(proj.x, proj.y, proj.radius * 2.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
+    // Outer halo ring (lighten blend for glow feel) — desktop only
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = proj.glow;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.radius * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     // Bright white core
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
@@ -4553,13 +4578,15 @@ function render() {
   // Enemy projectiles — hostile crimson with trail
   for (const ep of game.enemyProjectiles) {
     ctx.save();
-    ctx.shadowColor = ep.glow; ctx.shadowBlur = 20;
-    // Outer glow ring
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = ep.glow;
-    ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 2.0, 0, Math.PI * 2); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
+    ctx.shadowColor = ep.glow; ctx.shadowBlur = PERF.shadowGlow ? 20 : 0;
+    // Outer glow ring — desktop only
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = ep.glow;
+      ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 2.0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     ctx.globalAlpha = 1;
     ctx.fillStyle = ep.color;
     ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius, 0, Math.PI * 2); ctx.fill();
@@ -4575,20 +4602,22 @@ function render() {
     const r = sw.maxR * (1 - Math.pow(1 - tf, 2.2));
     const alpha = (1 - tf) * 0.85;
     ctx.save();
-    // Outer fill glow (lighter blend)
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = alpha * 0.18;
-    ctx.fillStyle = sw.color;
-    ctx.beginPath(); ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
+    // Outer fill glow (lighter blend) — desktop only
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = alpha * 0.18;
+      ctx.fillStyle = sw.color;
+      ctx.beginPath(); ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     // Primary ring
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = sw.color;
     ctx.lineWidth = sw.width * (1 - tf * 0.7);
-    ctx.shadowColor = sw.color; ctx.shadowBlur = 18;
+    ctx.shadowColor = sw.color; ctx.shadowBlur = PERF.shadowGlow ? 18 : 6;
     ctx.beginPath(); ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2); ctx.stroke();
-    // Inner echo ring (half radius, faster fade)
-    if (sw.maxR > 30) {
+    // Inner echo ring (half radius, faster fade) — desktop only
+    if (PERF.echoRing && sw.maxR > 30) {
       ctx.globalAlpha = alpha * 0.4;
       ctx.lineWidth = (sw.width * 0.5) * (1 - tf);
       ctx.shadowBlur = 8;
@@ -4603,8 +4632,8 @@ function render() {
     const alpha = Math.pow(pt.life / pt.maxLife, 0.8);
     const r = pt.radius * (0.25 + 0.75 * alpha);
     ctx.save();
-    // Outer glow halo (lighter blend)
-    if (r > 1.2) {
+    // Outer glow halo (lighter blend) — desktop only
+    if (PERF.addBlend && r > 1.2) {
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = alpha * 0.22;
       ctx.fillStyle = pt.color;
@@ -4613,7 +4642,7 @@ function render() {
     }
     ctx.globalAlpha = alpha;
     ctx.shadowColor = pt.color;
-    ctx.shadowBlur = pt.glow ? 10 : 0;
+    ctx.shadowBlur = (PERF.shadowGlow && pt.glow) ? 10 : 0;
     ctx.fillStyle = pt.color;
     ctx.beginPath(); ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2); ctx.fill();
     // Bright core on larger particles
@@ -4678,16 +4707,18 @@ function render() {
   ctx.save();
   const comboPow = Math.min(game.comboCount / 30, 1);
   const auraBase = 36 + Math.sin(game.gameTime * 0.05) * 5 + comboPow * 16;
-  // Outer soft halo (lighten)
-  ctx.globalCompositeOperation = 'lighter';
-  const outerGrad = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, auraBase * 2.5);
-  outerGrad.addColorStop(0, p.color + '28');
-  outerGrad.addColorStop(0.5, p.glow + '10');
-  outerGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = outerGrad;
-  ctx.globalAlpha = 1 + comboPow * 0.5;
-  ctx.beginPath(); ctx.arc(p.x, p.y, auraBase * 2.5, 0, Math.PI * 2); ctx.fill();
-  ctx.globalCompositeOperation = 'source-over';
+  // Outer soft halo (lighten) — desktop only
+  if (PERF.addBlend) {
+    ctx.globalCompositeOperation = 'lighter';
+    const outerGrad = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, auraBase * 2.5);
+    outerGrad.addColorStop(0, p.color + '28');
+    outerGrad.addColorStop(0.5, p.glow + '10');
+    outerGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = outerGrad;
+    ctx.globalAlpha = 1 + comboPow * 0.5;
+    ctx.beginPath(); ctx.arc(p.x, p.y, auraBase * 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
   // Inner warm core aura
   const auraGrad = ctx.createRadialGradient(p.x, p.y, 3, p.x, p.y, auraBase);
   auraGrad.addColorStop(0, p.color + '70');
@@ -5129,7 +5160,7 @@ canvas.addEventListener('touchcancel', () => endTouch(), {passive: false});
 function resizeCanvas() {
   const rect = gameContainer.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, PERF.mobile ? 1.5 : 2);
   W = Math.round(rect.width);
   H = Math.round(rect.height);
   canvas.width = Math.round(W * DPR);
