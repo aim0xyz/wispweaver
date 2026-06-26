@@ -1400,7 +1400,7 @@
   <!-- Menu -->
   <div class="screen-overlay" id="menu-screen">
     <div class="menu-aura"><span></span><span></span><span></span></div>
-    <div class="menu-emblem"><span></span><span></span><span></span></div>
+    <div class="menu-emblem" id="menuEmblem"><span></span><span></span><span></span></div>
     <div class="title">WISPWEAVER</div>
     <div class="subtitle">Echoes of Light</div>
     <div class="title-rule"></div>
@@ -6815,6 +6815,27 @@ try {
   if (bt && !bt.textContent) bt.textContent = BUILD;
   runIntro();
 } catch (err) { console.error('init warning:', err); endIntro(true); }
+
+// ─── DEBUG CHEAT: triple-click the menu orb within 1s → +100,000 Lumina ───
+(function() {
+  const emblem = document.getElementById('menuEmblem');
+  if (!emblem) return;
+  let clicks = 0, timer = null;
+  emblem.addEventListener('click', () => {
+    clicks++;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => { clicks = 0; }, 1000);
+    if (clicks >= 3) {
+      clicks = 0; clearTimeout(timer);
+      setBank(getBank() + 100000);
+      // Flash the orb white briefly as confirmation
+      emblem.style.transition = 'filter 0.1s';
+      emblem.style.filter = 'brightness(8) saturate(0)';
+      setTimeout(() => { emblem.style.filter = ''; }, 180);
+      updateMenuBest();
+    }
+  });
+})();
 
 console.log('Wispweaver loaded — weave light, push back the dark.');
 </script>
