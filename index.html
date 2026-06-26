@@ -397,9 +397,13 @@
     font-weight: 700;
     letter-spacing: -0.5px;
   }
-  #select-screen .hint {
+  .hint {
     font-size: 13px;
-    color: rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+  #select-screen .hint {
     margin-bottom: 24px;
     letter-spacing: 1px;
   }
@@ -4613,6 +4617,111 @@ function drawPlayerBody(p, r) {
 }
 
 // ─── RENDER ───
+// World-specific environmental decorations — unique per biome, extra-vivid in explore mode.
+function drawWorldEnv(w, t, mode) {
+  ctx.save();
+  const explore = mode === 'explore';
+
+  if (w.id === 'ashfields') {
+    // Rising fire embers
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    const count = explore ? 48 : 22;
+    const colors = ['#ff6622','#ffaa44','#ff3300','#ff8800'];
+    for (let i = 0; i < count; i++) {
+      const phase = ((t * 0.0045 + i * 0.34) % 1);
+      const x = (i * 97.3 + Math.sin(t * 0.018 + i * 0.7) * 22) % W;
+      const y = H * 1.06 - phase * (H * 1.12);
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.55 : 0.28);
+      const sz = 0.8 + Math.sin(t * 0.04 + i * 1.5) * 0.6;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = colors[i % 4];
+      ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
+    }
+
+  } else if (w.id === 'voidrift') {
+    // Expanding void ripples from screen center
+    ctx.globalCompositeOperation = 'source-over';
+    if (PERF.shadowGlow) { ctx.shadowColor = '#00aacc'; ctx.shadowBlur = 10; }
+    ctx.strokeStyle = '#00ccee';
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < 5; i++) {
+      const phase = ((t * 0.005 + i * 0.22) % 1);
+      const r = phase * Math.max(W, H) * 0.74;
+      ctx.globalAlpha = Math.sin(phase * Math.PI) * (explore ? 0.13 : 0.07);
+      ctx.beginPath(); ctx.arc(W/2, H/2, r, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    // Drifting void shards
+    const shardCount = explore ? 18 : 8;
+    for (let i = 0; i < shardCount; i++) {
+      const wobble = Math.sin(t * 0.007 + i * 1.4) * 28;
+      const x = (i * 143.6 + wobble) % W;
+      const y = ((i * 88.3 + t * 0.06) % H + H) % H;
+      ctx.globalAlpha = 0.05 + Math.sin(t * 0.012 + i * 0.8) * 0.04;
+      ctx.fillStyle = '#44ddff';
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.01 + i);
+      ctx.fillRect(-1, -7, 2, 14);
+      ctx.restore();
+    }
+
+  } else if (w.id === 'crystalmire') {
+    // Falling prismatic diamond shards
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    const count = explore ? 32 : 14;
+    const colors = ['#ee88ff','#ffaaff','#cc66ff','#ff99ee'];
+    for (let i = 0; i < count; i++) {
+      const phase = ((t * 0.0028 + i * 0.41) % 1);
+      const x = (i * 113.7 + 40) % W;
+      const y = phase * (H + 55) - 27;
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.48 : 0.22);
+      const sz = 1.5 + Math.sin(t * 0.04 + i) * 0.9;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = colors[i % 4];
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.015 + i * 0.5);
+      ctx.beginPath();
+      ctx.moveTo(0, -sz * 3.2); ctx.lineTo(sz, 0); ctx.lineTo(0, sz * 3.2); ctx.lineTo(-sz, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+  } else if (w.id === 'gloomwood') {
+    // Drifting spores — slow floating purple motes
+    ctx.globalCompositeOperation = 'source-over';
+    const count = explore ? 40 : 20;
+    for (let i = 0; i < count; i++) {
+      const wobble = Math.sin(t * 0.007 + i * 1.2) * 30;
+      const x = (i * 78.4 + wobble + t * 0.12) % W;
+      const y = ((i * 129.7 - t * 0.07) % H + H) % H;
+      const alpha = (0.07 + Math.sin(t * 0.013 + i * 0.9) * 0.05) * (explore ? 1.9 : 1);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = i % 2 === 0 ? '#9955cc' : '#7733aa';
+      if (PERF.shadowGlow) { ctx.shadowColor = '#9955cc'; ctx.shadowBlur = 6; }
+      ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+  } else if (w.id === 'eternal') {
+    // Golden rain — angled falling streaks
+    ctx.globalCompositeOperation = PERF.addBlend ? 'lighter' : 'source-over';
+    const count = explore ? 55 : 26;
+    const colors = ['#ffdd44','#ffcc00','#ffe877','#ffaa00'];
+    for (let i = 0; i < count; i++) {
+      const phase = ((t * 0.0055 + i * 0.28) % 1);
+      const x = (i * 89.1 + Math.sin(t * 0.009 + i * 0.6) * 16) % W;
+      const y = phase * (H + 80) - 40;
+      const alpha = Math.sin(phase * Math.PI) * (explore ? 0.52 : 0.28);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = colors[i % 4];
+      ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 2.5, y - 16); ctx.stroke();
+    }
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 function render() {
   ctx.save();
   
@@ -4669,14 +4778,15 @@ function render() {
   if (!game._nebula) {
     game._nebula = [];
     const tints = _world.nebulaTints;
-    for (let i = 0; i < PERF.nebulaCount; i++) {
+    const nebulaAlloc = game.mode === 'explore' ? PERF.nebulaCount + 3 : PERF.nebulaCount;
+    for (let i = 0; i < nebulaAlloc; i++) {
       game._nebula.push({
         x: Math.random() * W, y: Math.random() * H,
-        r: Math.max(W, H) * (0.28 + Math.random() * 0.18),
+        r: Math.max(W, H) * (0.28 + Math.random() * 0.22),
         color: tints[i % tints.length],
         dx: (Math.random() - 0.5) * 0.12, dy: (Math.random() - 0.5) * 0.12,
         phase: Math.random() * Math.PI * 2,
-        depth: 0.04 + Math.random() * 0.06,  // parallax depth for nebula layer
+        depth: 0.04 + Math.random() * 0.06,
       });
     }
   }
@@ -4687,7 +4797,7 @@ function render() {
     const wrapW = W + n.r * 2, wrapH = H + n.r * 2;
     const cx = ((n.x + game.gameTime * n.dx - pxN) % wrapW + wrapW) % wrapW;
     const cy = ((n.y + game.gameTime * n.dy - pyN) % wrapH + wrapH) % wrapH;
-    const breathe = 0.06 + 0.03 * Math.sin(game.gameTime * 0.01 + n.phase);
+    const breathe = (game.mode === 'explore' ? 0.09 : 0.06) + 0.03 * Math.sin(game.gameTime * 0.01 + n.phase);
     const ng = ctx.createRadialGradient(cx, cy, 0, cx, cy, n.r);
     ng.addColorStop(0, n.color);
     ng.addColorStop(1, 'transparent');
@@ -4752,16 +4862,19 @@ function render() {
     const ac = _world.ambientColor;
     ctx.save();
     const seed = game.gameTime;
-    for (let ai = 0; ai < 12; ai++) {
+    const ambCount = game.mode === 'explore' ? 26 : 12;
+    const ambAlpha = game.mode === 'explore' ? 0.55 : 0.35;
+    const ambSize  = game.mode === 'explore' ? 1.5 : 1.0;
+    for (let ai = 0; ai < ambCount; ai++) {
       const phase = (seed * 0.011 + ai * 0.83) % 1;
       const x = ((ai * 137.5 + seed * 0.3) % W);
       const wy = _world.id === 'ashfields'
-        ? H - (phase * (H + 80)) % (H + 80)          // embers rise
+        ? H - (phase * (H + 80)) % (H + 80)
         : _world.id === 'crystalmire'
-          ? (phase * H) % H                           // sparkles fall
-          : (phase * H + ai * 60) % H;                // drift
-      const alpha = Math.sin(phase * Math.PI) * 0.35;
-      const size = 1 + Math.sin(seed * 0.05 + ai * 1.7) * 0.8;
+          ? (phase * H) % H
+          : (phase * H + ai * 60) % H;
+      const alpha = Math.sin(phase * Math.PI) * ambAlpha;
+      const size = ambSize + Math.sin(seed * 0.05 + ai * 1.7) * 0.8;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = ac;
       ctx.beginPath();
@@ -4771,6 +4884,9 @@ function render() {
     ctx.globalAlpha = 1;
     ctx.restore();
   }
+
+  // World-specific animated environment — biome "feel" layer
+  drawWorldEnv(_world, game.gameTime, game.mode);
 
   if (!game.player || game.state !== 'playing') {
     ctx.restore();
@@ -5609,6 +5725,17 @@ function render() {
     vg.addColorStop(1, `rgba(${vRgb},${0.48 + bossActiveFrac * 2})`);
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
+  }
+
+  // Explore mode: map-edge darkening — the world grows darker at its boundaries.
+  if (game.mode === 'explore' && game.player) {
+    const edgeX = Math.min(p.x / (game.mapW * 0.18), (game.mapW - p.x) / (game.mapW * 0.18), 1);
+    const edgeY = Math.min(p.y / (game.mapH * 0.18), (game.mapH - p.y) / (game.mapH * 0.18), 1);
+    const edgeFrac = 1 - Math.min(edgeX, edgeY);
+    if (edgeFrac > 0) {
+      ctx.fillStyle = `rgba(0,0,0,${edgeFrac * 0.38})`;
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 
   // Low-HP danger pulse — red edges throb when the wisp is near death.
