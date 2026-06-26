@@ -1541,6 +1541,186 @@
                 inset 0 1px 0 rgba(255,255,255,0.06),
                 inset 0 0 40px rgba(255,140,40,0.04) !important;
   }
+
+  /* ═══════════════════════════════════════════════════
+     ═══ MAJOR REDESIGN: MENU HERO + CHAR SHOWCASE ═══
+     ═══════════════════════════════════════════════════ */
+
+  /* ── MAIN MENU: Hero scale ── */
+  #menu-screen .menu-emblem {
+    width: 160px !important; height: 160px !important;
+    margin-bottom: 2px !important;
+    filter: drop-shadow(0 0 32px rgba(255,160,60,0.65)) !important;
+  }
+  /* Light rays via 4th aura span */
+  #menu-screen .menu-aura span:nth-child(4) {
+    width: 800px !important; height: 800px !important;
+    left: 50% !important; top: -60px !important;
+    transform: translateX(-50%) !important;
+    border-radius: 0 !important;
+    filter: none !important;
+    opacity: 1 !important;
+    background: conic-gradient(from 0deg,
+      transparent 0deg, rgba(255,140,40,0.065) 6deg, transparent 13deg,
+      transparent 38deg, rgba(255,100,20,0.045) 44deg, transparent 51deg,
+      transparent 85deg, rgba(255,140,40,0.065) 91deg, transparent 98deg,
+      transparent 128deg, rgba(255,100,20,0.045) 134deg, transparent 141deg,
+      transparent 178deg, rgba(255,140,40,0.065) 184deg, transparent 191deg,
+      transparent 218deg, rgba(255,100,20,0.045) 224deg, transparent 231deg,
+      transparent 268deg, rgba(255,140,40,0.065) 274deg, transparent 281deg,
+      transparent 308deg, rgba(255,100,20,0.045) 314deg, transparent 321deg) !important;
+    animation: menuRaySpin 42s linear infinite !important;
+    mix-blend-mode: screen;
+  }
+  @keyframes menuRaySpin { to { transform: translateX(-50%) rotate(360deg); } }
+
+  #menu-screen .title {
+    font-size: clamp(50px, 13.5vw, 72px) !important;
+    letter-spacing: -2px !important;
+    margin-bottom: 6px !important;
+  }
+  #menu-screen .subtitle {
+    font-size: 15px !important; letter-spacing: 8px !important; margin-bottom: 14px !important;
+  }
+  #menu-screen .title-rule { width: 260px !important; margin: 4px 0 22px !important; }
+  #menu-screen .tagline { font-size: 15px !important; color: rgba(255,255,255,0.48) !important; }
+
+  /* ── CHARACTER SELECT: Open floating showcase ── */
+  #select-screen {
+    background: radial-gradient(ellipse 100% 60% at 50% 22%,
+      color-mix(in srgb, var(--cs-color, #8855ff) 26%, transparent),
+      rgba(5,4,16,0.99) 58%) !important;
+  }
+  #select-screen h2 {
+    font-size: 18px !important;
+    color: rgba(255,255,255,0.5) !important;
+    background: none !important;
+    -webkit-text-fill-color: unset !important;
+    filter: none !important;
+    font-weight: 500 !important;
+    letter-spacing: 3px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 0 !important;
+  }
+  #select-screen .hint { margin-bottom: 8px !important; }
+
+  /* Full-bleed carousel */
+  #select-screen .wisp-carousel {
+    position: relative !important;
+    display: block !important;
+    width: 100vw !important;
+    max-width: 600px !important;
+    margin: 0 !important; gap: 0 !important;
+  }
+  #select-screen .wisp-stage {
+    width: 100% !important; max-width: none !important;
+    min-height: 360px !important; perspective: 1200px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* Edge arrows */
+  #select-screen .carousel-arrow {
+    position: absolute !important;
+    top: 50% !important; transform: translateY(-50%) !important;
+    z-index: 20 !important;
+    background: rgba(255,255,255,0.04) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+    width: 50px !important; height: 50px !important;
+    font-size: 30px !important;
+  }
+  #select-screen .carousel-arrow:first-child { left: 8px !important; }
+  #select-screen .carousel-arrow:last-child  { right: 8px !important; }
+  #select-screen .carousel-arrow:hover {
+    background: rgba(255,255,255,0.10) !important;
+    border-color: rgba(255,255,255,0.22) !important;
+    box-shadow: 0 0 24px color-mix(in srgb, var(--cs-color, #8855ff) 45%, transparent) !important;
+  }
+
+  /* NO card box — character floats freely */
+  #select-screen .wisp-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+    padding: 0 64px !important;
+    width: 100% !important;
+  }
+  /* Dramatic entrance — blur-in from side */
+  #select-screen .wisp-card.enter-l { animation: csEnterL 0.55s cubic-bezier(.16,.86,.2,1) both !important; }
+  #select-screen .wisp-card.enter-r { animation: csEnterR 0.55s cubic-bezier(.16,.86,.2,1) both !important; }
+  @keyframes csEnterL {
+    from { opacity:0; transform:translateX(-90px) scale(0.8) rotateY(14deg); filter:blur(16px); }
+    to   { opacity:1; transform:none; filter:none; }
+  }
+  @keyframes csEnterR {
+    from { opacity:0; transform:translateX(90px) scale(0.8) rotateY(-14deg); filter:blur(16px); }
+    to   { opacity:1; transform:none; filter:none; }
+  }
+
+  /* Giant orb wrapper */
+  #select-screen .wisp-orb-wrap {
+    width: 156px !important; height: 156px !important; margin-bottom: 30px !important;
+  }
+  /* Massive multi-layer glow */
+  #select-screen .wisp-card .wisp-orb {
+    width: 100% !important; height: 100% !important;
+    box-shadow:
+      0 0 55px color-mix(in srgb, var(--wg) 95%, transparent),
+      0 0 130px color-mix(in srgb, var(--wg) 55%, transparent),
+      0 0 260px color-mix(in srgb, var(--wg) 22%, transparent) !important;
+    filter: brightness(1.1);
+    animation: orbBob 2.2s ease-in-out infinite, csOrbPulse 2.2s ease-in-out infinite !important;
+  }
+  @keyframes csOrbPulse {
+    0%,100% { filter: brightness(1.0); }
+    50%     { filter: brightness(1.2); }
+  }
+  /* Bigger orbit rings */
+  #select-screen .orb-ring-1 { inset: -24px !important; border-width: 2px !important; animation-duration: 2.8s !important; }
+  #select-screen .orb-ring-2 { inset: -40px !important; border-width: 1.5px !important; animation-duration: 4.5s !important; }
+
+  /* Hero name */
+  #select-screen .wisp-name {
+    font-size: 44px !important; letter-spacing: -1.5px !important; margin-bottom: 10px !important;
+    text-shadow: 0 0 55px color-mix(in srgb, var(--wg) 85%, transparent) !important;
+    filter: drop-shadow(0 0 22px color-mix(in srgb, var(--wg) 60%, transparent));
+  }
+  #select-screen .wisp-desc {
+    font-size: 14px !important; color: rgba(255,255,255,0.62) !important; margin-bottom: 20px !important;
+  }
+  #select-screen .wisp-trait { font-size: 12px !important; padding: 5px 12px !important; }
+  #select-screen .wisp-lock {
+    background: rgba(0,0,0,0.5) !important; border-color: rgba(255,200,90,0.65) !important;
+    font-size: 12px !important;
+  }
+
+  /* Locked card — still float, just desaturated */
+  #select-screen .wisp-card.locked .wisp-orb {
+    filter: grayscale(0.7) brightness(0.6) !important;
+  }
+  #select-screen .wisp-card.locked .wisp-name,
+  #select-screen .wisp-card.locked .wisp-desc,
+  #select-screen .wisp-card.locked .wisp-traits { opacity: 0.5; }
+
+  /* Wisp dots spacing */
+  #select-screen .wisp-dots { margin-bottom: 18px !important; }
+
+  /* Confirm button full-width on select screen */
+  #select-screen #selectConfirm { width: min(82vw, 320px) !important; }
+
+  /* Floating ember particles around the orb in char select */
+  .cs-embers { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+  .cs-ember {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, var(--ec, #fff), transparent 70%);
+    animation: csEmberFloat var(--ed, 3s) ease-in-out var(--edl, 0s) infinite;
+    opacity: 0;
+  }
+  @keyframes csEmberFloat {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+    30%  { opacity: var(--eo, 0.7); }
+    100% { opacity: 0; transform: translate(var(--ex, 20px), var(--ey, -60px)) scale(0.2); }
+  }
 </style>
 </head>
 <body>
@@ -1651,7 +1831,7 @@
 
   <!-- Menu -->
   <div class="screen-overlay" id="menu-screen">
-    <div class="menu-aura"><span></span><span></span><span></span></div>
+    <div class="menu-aura"><span></span><span></span><span></span><span></span></div>
     <div class="menu-motes" id="menuMotes"></div>
     <div class="menu-emblem" id="menuEmblem"><span></span><span></span><span></span></div>
     <div class="title">WISPWEAVER</div>
@@ -3141,14 +3321,26 @@ function renderCharSelect(dir) {
   updateDiffButtons();
   const ch = CHARACTERS[game.selectedCharIdx];
   const locked = ch.unlock && !isCharUnlocked(ch.id);
+  // Background follows character color
+  document.getElementById('select-screen').style.setProperty('--cs-color', ch.color);
   const stage = document.getElementById('wispStage');
   const enter = dir === undefined ? '' : (dir < 0 ? ' enter-l' : ' enter-r');
   stage.innerHTML = `
     <div class="wisp-card${enter}${locked ? ' locked' : ''}" style="--wc:${ch.color};--wg:${ch.glow}">
       <div class="wisp-orb-wrap">
         <div class="wisp-orb">${getIconSVG(ch.icon, '#1a1320')}</div>
-        <div class="orb-ring orb-ring-1" style="border-top-color:color-mix(in srgb,${ch.color} 50%,rgba(255,255,255,0.3));border-right-color:color-mix(in srgb,${ch.color} 20%,transparent)"></div>
-        <div class="orb-ring orb-ring-2" style="border-bottom-color:color-mix(in srgb,${ch.color} 30%,rgba(255,255,255,0.2));border-left-color:color-mix(in srgb,${ch.color} 15%,transparent)"></div>
+        <div class="orb-ring orb-ring-1" style="border-top-color:color-mix(in srgb,${ch.color} 55%,rgba(255,255,255,0.35));border-right-color:color-mix(in srgb,${ch.color} 22%,transparent)"></div>
+        <div class="orb-ring orb-ring-2" style="border-bottom-color:color-mix(in srgb,${ch.color} 32%,rgba(255,255,255,0.22));border-left-color:color-mix(in srgb,${ch.color} 16%,transparent)"></div>
+        ${[0,1,2,3,4,5,6,7].map(j => {
+          const angle = (j / 8) * Math.PI * 2;
+          const r = 72 + (j % 3) * 14;
+          const bx = Math.cos(angle) * r;
+          const by = Math.sin(angle) * r;
+          const sz = 2 + (j % 3);
+          const dur = 2.5 + j * 0.4;
+          const del = j * 0.35;
+          return `<div class="cs-ember" style="width:${sz}px;height:${sz}px;left:calc(50% + ${bx.toFixed(1)}px);top:calc(50% + ${by.toFixed(1)}px);--ec:${ch.color};--ed:${dur}s;--edl:${del}s;--eo:0.6;--ex:${(bx*0.3).toFixed(1)}px;--ey:${(by*0.3 - 28).toFixed(1)}px;transform:translate(-50%,-50%)"></div>`;
+        }).join('')}
       </div>
       <div class="wisp-name">${ch.name}</div>
       <div class="wisp-desc">${ch.desc}</div>
