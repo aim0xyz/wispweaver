@@ -900,9 +900,22 @@
     font-size: 15px;
   }
   .lb-item .wave-info {
-    color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.55);
     font-size: 12px;
     margin-left: 12px;
+    text-align: right;
+    line-height: 1.4;
+  }
+  .lb-item .wave-info .wave-num {
+    color: #88ddff;
+    font-weight: 600;
+    font-size: 13px;
+    display: block;
+  }
+  .lb-item .wave-info .wave-world {
+    color: rgba(255,255,255,0.35);
+    font-size: 11px;
+    display: block;
   }
   .lb-empty {
     color: rgba(255,255,255,0.2);
@@ -3607,7 +3620,7 @@ function showLeaderboard() {
       <span class="rank ${rankClass}">#${i+1}</span>
       <span class="name"><span class="char-ico">${iconSvg}</span> ${escHtml(entry.name)}</span>
       <span class="score">${entry.score.toLocaleString()}</span>
-      <span class="wave-info">Wave ${entry.wave}</span>
+      <span class="wave-info"><span class="wave-num">Wave ${entry.wave}</span><span class="wave-world">${getWorld(entry.wave || 1).name}</span></span>
     </div>`;
   }).join('');
 }
