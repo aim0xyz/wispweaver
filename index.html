@@ -1978,6 +1978,22 @@ function svgPhantom(color) {
     <ellipse cx="31" cy="36" rx="3" ry="2" fill="${c}" opacity="0.2"/>
   </svg>`;
 }
+function svgApex(color) {
+  const c = color || '#ff1155';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <circle cx="24" cy="24" r="18" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.22"/>
+    <circle cx="24" cy="24" r="11" fill="none" stroke="${c}" stroke-width="2" opacity="0.9"/>
+    <circle cx="24" cy="24" r="3.5" fill="${c}" opacity="0.95"/>
+    <line x1="24" y1="4"  x2="24" y2="13" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="24" y1="35" x2="24" y2="44" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="4"  y1="24" x2="13" y2="24" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="35" y1="24" x2="44" y2="24" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="12" y1="12" x2="16" y2="16" stroke="${c}" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+    <line x1="36" y1="12" x2="32" y2="16" stroke="${c}" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+    <line x1="12" y1="36" x2="16" y2="32" stroke="${c}" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+    <line x1="36" y1="36" x2="32" y2="32" stroke="${c}" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+  </svg>`;
+}
 function svgNova(color) {
   const c = color || '#fff4aa';
   let rays = '';
@@ -1999,7 +2015,7 @@ function svgNova(color) {
 
 // ─── ICON MAP ───
 const ICON_MAP = {
-  flame: svgFlame, sparkle: svgSparkle, prism: svgPrism, echo: svgEcho,
+  flame: svgFlame, sparkle: svgSparkle, prism: svgPrism, echo: svgEcho, apex: svgApex,
   diamond: svgDiamond,
   wave: svgWave, bolt: svgBolt, burst: svgBurst, fork: svgFork,
   trail: svgTrail, radiance: svgRadiance, wind: svgWind,
@@ -2041,6 +2057,10 @@ const CHARACTERS = [
     desc:'Lebendiger Stern — lädt Sternenergie auf, verbrennt Feinde in der Nähe und explodiert am Rand des Todes',
     ability:'Sternkern-Aufladung · Koronenhalo · Supernova (1× pro Run)',
     bonus: { damage: 6 }, color:'#fff4aa', glow:'#ffcc00', unlock: 35000 },
+  { id:'apex', name:'Apex', icon:'apex',
+    desc:'Kein Feind entkommt — jedes Projektil ist eine unerbittliche Suchrakete die ihr Ziel findet',
+    ability:'Homing-Raketen · 3 Suchraketen ab Start · Langer Raketenschweif',
+    bonus: { projectiles: 2 }, color:'#ff1155', glow:'#cc0033', unlock: 60000 },
 ];
 
 // ─── UPGRADES ───
@@ -2509,11 +2529,13 @@ class Projectile {
     this.hitEnemies = new Set();
     this.trail = [];
     this.pulse = Math.random() * 6;
+    this.homing = false;
+    this.trailMax = 8;
   }
 
   update() {
     this.trail.push({x:this.x, y:this.y});
-    if (this.trail.length > 8) this.trail.shift();
+    if (this.trail.length > this.trailMax) this.trail.shift();
     this.x += this.vx;
     this.y += this.vy;
     this.life--;
@@ -2888,8 +2910,14 @@ function playerAttack() {
   // First offset (0) always fires straight at the target — the rest fan out.
   for (const offset of offsets) {
     const angle = baseAngle + offset;
-    const proj = new Projectile(p.x, p.y, angle, 7, stats.damage, true, p.color, p.glow, stats.chain);
+    const proj = new Projectile(p.x, p.y, angle, p.charId === 'apex' ? 8 : 7, stats.damage, true, p.color, p.glow, stats.chain);
     proj.life = projLife;
+    if (p.charId === 'apex') {
+      proj.homing = true;
+      proj.trailMax = 20;
+      proj.radius = 6;
+      proj.life = Math.round(projLife * 1.8);
+    }
     game.projectiles.push(proj);
   }
 
@@ -3960,7 +3988,27 @@ function update() {
   for (let i = game.projectiles.length - 1; i >= 0; i--) {
     const proj = game.projectiles[i];
     proj.update();
-    
+
+    // Homing: steer toward nearest enemy (Apex character)
+    if (proj.homing && proj.isPlayer && game.enemies.length > 0) {
+      let nearest = null, nearD = Infinity;
+      for (const e of game.enemies) {
+        const d = dist(proj.x, proj.y, e.x, e.y);
+        if (d < nearD) { nearD = d; nearest = e; }
+      }
+      if (nearest) {
+        const desired = Math.atan2(nearest.y - proj.y, nearest.x - proj.x);
+        const current = Math.atan2(proj.vy, proj.vx);
+        let diff = desired - current;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        const newAngle = current + Math.sign(diff) * Math.min(Math.abs(diff), 0.13);
+        const spd = Math.sqrt(proj.vx * proj.vx + proj.vy * proj.vy);
+        proj.vx = Math.cos(newAngle) * spd;
+        proj.vy = Math.sin(newAngle) * spd;
+      }
+    }
+
     if (proj.life <= 0) {
       spawnParticles(proj.x, proj.y, proj.color, 5, 2, 10, 2);
       game.projectiles.splice(i, 1);
@@ -5105,6 +5153,19 @@ function render() {
       ctx.arc(proj.x, proj.y, proj.radius * 2.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
+    }
+    // Homing missile: pulsing targeting ring
+    if (proj.homing) {
+      const ringPulse = 0.5 + 0.5 * Math.sin(proj.pulse * 0.5);
+      ctx.globalAlpha = ringPulse * 0.6;
+      ctx.strokeStyle = proj.color;
+      ctx.shadowColor = proj.glow;
+      ctx.shadowBlur = PERF.shadowGlow ? 10 : 0;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.radius * 2.8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     }
     // Bright white core
     ctx.shadowBlur = 0;
