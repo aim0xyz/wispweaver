@@ -2443,7 +2443,7 @@ class Enemy {
         this.color = '#3366cc';
         this.glow = '#2244aa';
         this.score = 20;
-        this.castCooldown = 60 + Math.floor(Math.random() * 40);
+        this.castCooldown = 140 + Math.floor(Math.random() * 60);
         this.preferredDist = 230;   // tries to hold this range and shoot
         break;
       case 'boss':
@@ -3792,7 +3792,7 @@ function update() {
           if (game.wave >= 4 && Math.random() < 0.12) types.push('spawner');
           // More variety at higher waves
           if (game.wave >= 6 && Math.random() < 0.3) types.push('runner');
-          if (game.wave >= 7 && Math.random() < 0.25) types.push('caster');
+          if (game.wave >= 7 && Math.random() < 0.10) types.push('caster');
           if (game.wave >= 8 && Math.random() < 0.1) types.push('blight');
           const type = types[Math.floor(Math.random() * types.length)];
           spawnEnemy(type);
@@ -3836,8 +3836,8 @@ function update() {
         e.y += Math.sin(angleToPlayer + Math.PI / 2) * moveSpd * 0.6;
       }
       e.castCooldown--;
-      if (e.castCooldown <= 0 && dToPlayer < 460) {
-        e.castCooldown = 95 + Math.floor(Math.random() * 50);
+      if (e.castCooldown <= 0 && dToPlayer < 380) {
+        e.castCooldown = 145 + Math.floor(Math.random() * 80);
         const spd = 3.6;
         game.enemyProjectiles.push({
           x: e.x, y: e.y,
