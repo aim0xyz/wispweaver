@@ -1101,19 +1101,6 @@
   }
   #autoMenu .auto-opt.sel { background: rgba(136,255,204,0.12); border-color: rgba(136,255,204,0.4); color: #aaffdd; }
   #autoMenu .auto-opt.sel .dot { background: #aaffdd; border-color: #aaffdd; box-shadow: 0 0 8px rgba(136,255,204,0.6); }
-  #dashBtn {
-    position: absolute; bottom: 26px; right: 22px; z-index: 30;
-    width: 68px; height: 68px; border-radius: 50%;
-    background: radial-gradient(circle at 50% 40%, rgba(120,200,255,0.22), rgba(40,80,160,0.18));
-    border: 1.5px solid rgba(150,210,255,0.45);
-    color: #cfe9ff; font-family: 'Space Grotesk', sans-serif;
-    font-size: 12px; font-weight: 800; letter-spacing: 1px;
-    display: none; align-items: center; justify-content: center;
-    cursor: pointer; transition: opacity 0.12s, transform 0.1s;
-    box-shadow: 0 0 18px rgba(90,160,255,0.25); user-select: none; -webkit-user-select: none;
-    touch-action: none;
-  }
-  #dashBtn:active { transform: scale(0.92); }
   #quitBtn {
     position: absolute; top: 12px; right: 158px;
     width: 34px; height: 34px; border-radius: 9px;
@@ -1337,7 +1324,6 @@
       <path d="M14 13l3-3-3-3M17 10H8"/>
     </svg>
   </button>
-  <button id="dashBtn" aria-label="Dash">DASH</button>
 
   <!-- Toast -->
   <div id="toast"></div>
@@ -1672,7 +1658,6 @@ const Sound = (() => {
     wave:     () => { tone(330, 0.28, 'sine', 0.11, 495); tone(165, 0.4, 'sine', 0.07, 247); },
     boss:     () => { tone(110, 0.6, 'sawtooth', 0.2, 55); tone(70, 0.85, 'sine', 0.16, 40); noise(0.4, 0.18, 600); },
     combo:    () => tone(880, 0.1, 'triangle', 0.09, 1320),
-    dash:     () => { tone(720, 0.14, 'sine', 0.1, 180); noise(0.1, 0.07, 1200); },
     gameover: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.42, 'triangle', 0.15, f * 0.6, i * 0.14)),
     best:     () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.26, 'triangle', 0.14, null, i * 0.08)),
   };
@@ -2146,7 +2131,7 @@ const CHARACTERS = [
     ability:'Gravitationspuls · Orbitale Trümmer · SINGULARITÄT alle 3 Pulse',
     bonus: { damage: 4 }, color:'#6644ff', glow:'#4422dd', unlock: 10000 },
   { id:'phantom', name:'Phantom', icon:'phantom',
-    desc:'Meister der Schatten — hinterlässt Geisterkopien beim Dash und wandelt Schmerz in Macht',
+    desc:'Meister der Schatten — beschwört Geisterkopien und wandelt Schmerz in Macht',
     ability:'Schattenecho · Phasenrüstung · Schattensalve alle 5 Schüsse',
     bonus: { speed: 0.5 }, color:'#c8beff', glow:'#8877ff', unlock: 20000 },
   { id:'nova',    name:'Nova',    icon:'nova',
@@ -2250,10 +2235,6 @@ function getWorld(wave)    { return WORLDS[getWorldIdx(wave)]; }
 // distinct from every player colour (orange / cyan / purple / green).
 const ENEMY_SHOT = { color: '#ff2e4d', glow: '#ff0033', core: '#ffc0cb' };
 
-// ─── DASH ─── quick burst-dodge with brief invincibility.
-const DASH_SPEED = 12;      // px per tick while dashing
-const DASH_DURATION = 10;   // ticks the dash lasts
-const DASH_COOLDOWN = 78;   // ticks before it's ready again (~1.3s)
 
 // ─── POWER-UPS ─── rare drops from enemies. `timed` (frames) = buff duration,
 // 0 = instant effect. `letter` is the glyph drawn on the pickup.
@@ -2271,7 +2252,6 @@ const SHOP_ITEMS = [
   { id: 'hp',      name: 'Lebenskern',    desc: '+25 Max-HP pro Stufe',          maxLvl: 10, base: 100, icon: 'shop_hp',     color: '#ff6680' },
   { id: 'dmg',     name: 'Glutkern',      desc: '+8% Schaden pro Stufe',         maxLvl: 10, base: 130, icon: 'shop_dmg',    color: '#ff9a4d' },
   { id: 'speed',   name: 'Windschritt',   desc: '+5% Bewegungstempo pro Stufe',  maxLvl: 10, base: 115, icon: 'shop_speed',  color: '#88ffcc' },
-  { id: 'dashcd',  name: 'Phasenschritt', desc: 'Dash-Abklingzeit −8% pro Stufe',maxLvl: 10, base: 160, icon: 'shop_dash',   color: '#66ddff' },
   { id: 'lumina',  name: 'Lichtsog',      desc: '+15% Lumina-Ertrag pro Stufe',  maxLvl: 10, base: 90,  icon: 'shop_lumina', color: '#ffcc66' },
   { id: 'revive',  name: 'Zweites Licht', desc: '+1 Wiederbelebung pro Stufe',   maxLvl:  5, base: 560, icon: 'shop_revive', color: '#ffb066' },
 ];
@@ -2442,9 +2422,6 @@ class Player {
     this.angle = 0;
     this.burnAura = 0;
     this.attackPulse = 0;
-    this.dashCooldown = 0;
-    this.dashTimer = 0;
-    this.dashDirX = 0; this.dashDirY = 0;
     this.echoTimer = 0;
     this.vortexTimer = 0;
     this.vortexPullActive = 0;
@@ -2472,7 +2449,6 @@ class Player {
     this.maxHp += 25 * (sl.hp || 0);
     this.damage *= 1 + 0.08 * (sl.dmg || 0);
     this.speed *= 1 + 0.05 * (sl.speed || 0);
-    this.dashCdMult = 1 - 0.08 * (sl.dashcd || 0);
     this.revives = sl.revive || 0;
     this.hp = this.maxHp;
   }
@@ -2855,7 +2831,6 @@ function startGame() {
   game.state = 'playing';
   
   document.getElementById('hud').style.display = 'flex';
-  document.getElementById('dashBtn').style.display = 'flex';
   document.getElementById('quitBtn').style.display = 'flex';
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('leaderboard-screen').classList.add('hidden');
@@ -2872,8 +2847,8 @@ function startGame() {
   if (Store.get('ww_seenHint') !== '1') {
     const onTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
     const tip = onTouch
-      ? 'Ziehe zum Bewegen · DASH-Knopf weicht aus · dein Wisp greift von allein an'
-      : 'WASD / Pfeile bewegen · Leertaste = Dash · dein Wisp greift von allein an';
+      ? 'Ziehe zum Bewegen · dein Wisp greift von allein an'
+      : 'WASD / Pfeile bewegen · dein Wisp greift von allein an';
     setTimeout(() => { if (game.state === 'playing') showStory(tip); }, 1100);
     Store.set('ww_seenHint', '1');
   }
@@ -3292,7 +3267,6 @@ function gameOver() {
 
   document.getElementById('gameover-screen').classList.remove('hidden');
   document.getElementById('hud').style.display = 'none';
-  document.getElementById('dashBtn').style.display = 'none';
   document.getElementById('quitBtn').style.display = 'none';
 
   sfx('gameover');
@@ -3309,7 +3283,6 @@ function backToMenu() {
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('leaderboard-screen').classList.add('hidden');
   document.getElementById('hud').style.display = 'none';
-  document.getElementById('dashBtn').style.display = 'none';
   document.getElementById('quitBtn').style.display = 'none';
   document.getElementById('menu-screen').classList.remove('hidden');
   updateMenuBest();
@@ -3544,8 +3517,7 @@ function update() {
   document.getElementById('luminaCount').textContent = game.lumina;
   const charData = CHARACTERS.find(c => c.id === p.charId);
   document.getElementById('charName').textContent = charData ? charData.name : '';
-  const dashBtn = document.getElementById('dashBtn');
-  if (dashBtn) dashBtn.style.opacity = p.dashCooldown > 0 ? 0.35 : 1;
+
 
   // Boss health bar
   const bossBar = document.getElementById('boss-bar');
@@ -3594,42 +3566,9 @@ function update() {
   if (mag > 1) { dx /= mag; dy /= mag; mag = 1; }   // cap (normalises diagonals too)
   game.isMoving = mag > 0.05;
 
-  // ─── DASH ───
-  if (p.dashCooldown > 0) p.dashCooldown--;
-  if (game._dashRequested) {
-    game._dashRequested = false;
-    if (p.dashCooldown <= 0 && p.dashTimer <= 0) {
-      let ddx = dx, ddy = dy;
-      if (Math.hypot(ddx, ddy) < 0.1) { ddx = Math.cos(p.angle); ddy = Math.sin(p.angle); }
-      const dm = Math.hypot(ddx, ddy) || 1;
-      p.dashDirX = ddx / dm; p.dashDirY = ddy / dm;
-      p.dashTimer = DASH_DURATION;
-      p.dashCooldown = Math.round(DASH_COOLDOWN * (p.dashCdMult || 1));
-      p.invincible = Math.max(p.invincible, DASH_DURATION + 5);   // i-frames
-      p.angle = Math.atan2(p.dashDirY, p.dashDirX);
-      sfx('dash');
-      spawnShockwave(p.x, p.y, p.color, 46, 16, 4);
-      spawnParticles(p.x, p.y, p.glow, 16, 5, 18, 3);
-      // Phantom: leave a shadow echo at dash origin
-      if (p.charId === 'phantom' && game.phantomEchoes) {
-        game.phantomEchoes.push({ x: p.x, y: p.y, life: 80, fireTimer: 0 });
-      }
-    }
-  }
-
-  if (p.dashTimer > 0) {
-    // Dashing: committed burst along the locked direction.
-    p.dashTimer--;
-    p.x += p.dashDirX * DASH_SPEED;
-    p.y += p.dashDirY * DASH_SPEED;
-    game.isMoving = true;
-    game.trail.push({x: p.x, y: p.y, life: stats.trailDuration});
-    spawnParticles(p.x, p.y, p.color, 2, 1.5, 12, 2.5);
-  } else {
-    p.x += dx * stats.speed;
-    p.y += dy * stats.speed;
-    if (game.isMoving) p.angle = Math.atan2(dy, dx);
-  }
+  p.x += dx * stats.speed;
+  p.y += dy * stats.speed;
+  if (game.isMoving) p.angle = Math.atan2(dy, dx);
   p.x = Math.max(p.radius, Math.min(game.mapW - p.radius, p.x));
   p.y = Math.max(p.radius, Math.min(game.mapH - p.radius, p.y));
   if (game.mode === 'explore') {
@@ -3842,8 +3781,14 @@ function update() {
     }
   }
 
-  // Phantom: phase echo cleanup + shade volley tracking in attack() section
+  // Phantom: spawn echo every 4s automatically (was triggered by dash)
   if (p.charId === 'phantom') {
+    p.echoTimer = (p.echoTimer || 0) + 1;
+    if (p.echoTimer >= 240 && game.phantomEchoes.length < 3) {
+      p.echoTimer = 0;
+      game.phantomEchoes.push({ x: p.x, y: p.y, life: 80, fireTimer: 0 });
+      spawnParticles(p.x, p.y, '#c8beff', 14, 4, 18, 2.5);
+    }
     for (let pi2 = game.phantomEchoes.length - 1; pi2 >= 0; pi2--) {
       const echo = game.phantomEchoes[pi2];
       echo.life--;
@@ -6065,24 +6010,7 @@ function render() {
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   
-  // Dash cooldown ring under the wisp — fills back up as the dash recharges.
-  if (p.dashCooldown > 0) {
-    const frac = 1 - p.dashCooldown / (DASH_COOLDOWN * (p.dashCdMult || 1));
-    ctx.save();
-    ctx.strokeStyle = 'rgba(150,210,255,0.5)';
-    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.radius + 9, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  } else {
-    // Ready: a faint full ring pulse.
-    ctx.save();
-    ctx.strokeStyle = `rgba(150,210,255,${0.12 + 0.08 * Math.sin(game.gameTime * 0.1)})`;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius + 9, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
-  }
+
 
   // Player glow aura — layered, reactive to combat
   ctx.save();
@@ -6423,11 +6351,6 @@ document.addEventListener('keydown', e => {
   // Toggle autopilot with P (but not while typing in a field)
   if (key === 'p' && document.activeElement?.tagName !== 'INPUT') cycleAutoMode();
 
-  // Dash with Space or Shift
-  if ((key === ' ' || key === 'spacebar' || key === 'shift') && game.state === 'playing') {
-    e.preventDefault();
-    game._dashRequested = true;
-  }
 
   // Wisp carousel navigation
   if (game.state === 'select') {
@@ -6469,14 +6392,6 @@ document.addEventListener('keyup', e => {
   }, { passive: true });
 })();
 
-// Dash button (touch + mouse) — separate from the joystick canvas.
-(function(){
-  const db = document.getElementById('dashBtn');
-  if (!db) return;
-  const fire = (e) => { e.preventDefault(); e.stopPropagation(); if (game.state === 'playing') { game._dashRequested = true; Sound.resume(); } };
-  db.addEventListener('touchstart', fire, { passive: false });
-  db.addEventListener('mousedown', fire);
-})();
 
 function canvasPos(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
