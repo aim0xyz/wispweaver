@@ -438,6 +438,8 @@
   /* ─── Lumina Shop ─── */
   #shop-screen {
     background: radial-gradient(ellipse 90% 60% at 50% 26%, rgba(60,42,18,0.5), rgba(10,10,26,0.95) 70%);
+    padding-top: 72px;
+    justify-content: flex-start;
   }
   #shop-screen h2 {
     background: linear-gradient(120deg, #ffd98a, #ffb347, #ffcc66);
@@ -2470,6 +2472,48 @@ class Enemy {
         this.castCooldown = 140 + Math.floor(Math.random() * 60);
         this.preferredDist = 230;   // tries to hold this range and shoot
         break;
+      case 'wraith':
+        this.radius = 11;
+        this.hp = 18 + wave * 2.5;
+        this.maxHp = this.hp;
+        this.speed = 0.7 + wave * 0.025;
+        this.damage = 8 + Math.floor(wave * 0.4);
+        this.color = '#2244dd';
+        this.glow = '#1133bb';
+        this.score = 22;
+        this.blinkCooldown = 90 + Math.floor(Math.random() * 60);
+        break;
+      case 'tank':
+        this.radius = 22;
+        this.hp = 120 + wave * 14;
+        this.maxHp = this.hp;
+        this.speed = 0.38 + wave * 0.008;
+        this.damage = 18 + Math.floor(wave * 0.9);
+        this.color = '#3a4a5a';
+        this.glow = '#223344';
+        this.score = 50;
+        this.armor = true;
+        break;
+      case 'bomber':
+        this.radius = 15;
+        this.hp = 38 + wave * 4;
+        this.maxHp = this.hp;
+        this.speed = 0.55 + wave * 0.015;
+        this.damage = 12 + Math.floor(wave * 0.5);
+        this.color = '#ff5500';
+        this.glow = '#ff2200';
+        this.score = 35;
+        break;
+      case 'soul':
+        this.radius = 7;
+        this.hp = 12 + wave * 1.5;
+        this.maxHp = this.hp;
+        this.speed = 2.8 + wave * 0.055;
+        this.damage = 7 + Math.floor(wave * 0.3);
+        this.color = '#ddeeff';
+        this.glow = '#88ddff';
+        this.score = 18;
+        break;
       case 'boss':
         this.radius = 32;
         this.hp = 200 + wave * 40;
@@ -2495,7 +2539,8 @@ class Enemy {
   }
 
   takeDamage(amount) {
-    this.hp -= amount;
+    const dmg = (this.armor && this.hp > this.maxHp * 0.5) ? Math.ceil(amount * 0.35) : amount;
+    this.hp -= dmg;
     this.hitFlash = 6;
     if (this.hp <= 0) return true;
     return false;
@@ -3826,6 +3871,16 @@ function update() {
           if (game.wave >= 6 && Math.random() < 0.3) types.push('runner');
           if (game.wave >= 7 && Math.random() < 0.10) types.push('caster');
           if (game.wave >= 8 && Math.random() < 0.1) types.push('blight');
+          // New enemy types — appear progressively in higher biomes
+          if (game.wave >= 12) types.push('wraith');
+          if (game.wave >= 16 && Math.random() < 0.35) types.push('wraith');
+          if (game.wave >= 22) types.push('tank');
+          if (game.wave >= 28 && Math.random() < 0.25) types.push('tank');
+          if (game.wave >= 30) types.push('bomber');
+          if (game.wave >= 35 && Math.random() < 0.3) types.push('bomber');
+          if (game.wave >= 40) types.push('soul');
+          if (game.wave >= 45 && Math.random() < 0.5) types.push('soul');
+          if (game.wave >= 50 && Math.random() < 0.4) types.push('soul');
           const type = types[Math.floor(Math.random() * types.length)];
           spawnEnemy(type);
           game.enemiesSpawned++;
@@ -3886,6 +3941,21 @@ function update() {
       if (e.chargeFlash <= 0 && dToPlayer > e.radius + p.radius) {
         e.x += Math.cos(angleToPlayer) * moveSpd * 0.38;
         e.y += Math.sin(angleToPlayer) * moveSpd * 0.38;
+      }
+    } else if (e.type === 'wraith') {
+      e.blinkCooldown--;
+      if (e.blinkCooldown <= 0 && dToPlayer < 520) {
+        const ba = Math.random() * Math.PI * 2;
+        const bd = 85 + Math.random() * 100;
+        e.x = p.x + Math.cos(ba) * bd;
+        e.y = p.y + Math.sin(ba) * bd;
+        e.x = Math.max(e.radius, Math.min(game.mapW - e.radius, e.x));
+        e.y = Math.max(e.radius, Math.min(game.mapH - e.radius, e.y));
+        spawnParticles(e.x, e.y, '#4466ff', 14, 4, 18, 2);
+        e.blinkCooldown = 105 + Math.floor(Math.random() * 65);
+      } else if (dToPlayer > e.radius + p.radius) {
+        e.x += Math.cos(angleToPlayer) * moveSpd;
+        e.y += Math.sin(angleToPlayer) * moveSpd;
       }
     } else if (e.type !== 'spawner' || game.enemies.length < 20) {
       if (dToPlayer > e.radius + p.radius) {
@@ -4182,13 +4252,41 @@ function killEnemy(e) {
     game.screenShake = Math.max(game.screenShake, 6);
   }
   
+  // Bomber: death explosion — AoE damage to player and nearby enemies
+  if (e.type === 'bomber' && !e._killPending) {
+    const blastR = 135;
+    spawnShockwave(e.x, e.y, '#ff6600', blastR * 1.3, 28, 8);
+    spawnParticles(e.x, e.y, '#ff6600', 28, 7, 22, 3.5);
+    game.screenShake = Math.max(game.screenShake, 10);
+    game.screenFlash = Math.max(game.screenFlash, 6); game._flashColor = '220,80,0';
+    for (let i = game.enemies.length - 1; i >= 0; i--) {
+      const en = game.enemies[i];
+      if (en === e || en._killPending) continue;
+      const bd = dist(e.x, e.y, en.x, en.y);
+      if (bd < blastR) {
+        const blastDmg = Math.round(e.damage * 2 * (1 - bd / blastR));
+        if (en.takeDamage(blastDmg)) { en._killPending = true; killEnemy(en); }
+      }
+    }
+    if (game.player && game.player.invincible <= 0) {
+      const pd = dist(e.x, e.y, game.player.x, game.player.y);
+      if (pd < blastR + game.player.radius) {
+        const dmg = Math.round(e.damage * 1.2 * (1 - pd / (blastR + game.player.radius)));
+        game.player.hp -= dmg;
+        game.player.invincible = 30;
+        spawnParticles(game.player.x, game.player.y, '#ff4400', 14, 4, 18, 2);
+        game.damageTexts.push(new DamageText(game.player.x, game.player.y - 20, `-${dmg}`, '#ff6600', 22));
+      }
+    }
+  }
+
   // Lumina drops as orbs
-  const dropCount = e.type === 'boss' ? 25 : e.type === 'blight' ? 6 : e.type === 'spawner' ? 5 : 2;
+  const dropCount = e.type === 'boss' ? 25 : (e.type === 'blight' || e.type === 'tank') ? 7 : e.type === 'spawner' ? 5 : e.type === 'bomber' ? 4 : 2;
   spawnLumina(e.x, e.y, dropCount);
 
   // Rare power-up drop — bosses always, tougher foes sometimes, fodder rarely.
   if (!e._killPending) {
-    const pchance = e.type === 'boss' ? 1 : (e.type === 'blight' || e.type === 'spawner') ? 0.12 : 0.025;
+    const pchance = e.type === 'boss' ? 1 : (e.type === 'blight' || e.type === 'spawner' || e.type === 'tank') ? 0.12 : e.type === 'bomber' ? 0.07 : 0.025;
     if (Math.random() < pchance) spawnPowerup(e.x, e.y);
   }
   
@@ -4480,6 +4578,114 @@ function drawEnemyBody(e, faceA) {
       ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + 8, 0, Math.PI * 2); ctx.stroke();
       ctx.shadowBlur = 0;
     }
+    return;
+  }
+
+  if (e.type === 'wraith') {
+    const blinkSoon = e.blinkCooldown < 38;
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    const pulse = 1 + Math.sin(t * 3.5 + e.seed) * 0.11;
+    // Outer ghost ring — brightens before blink
+    ctx.globalAlpha = blinkSoon ? 0.28 + (38 - e.blinkCooldown) / 38 * 0.55 : 0.32;
+    ctx.strokeStyle = body; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * pulse, 0, Math.PI * 2); ctx.stroke();
+    // Solid inner core
+    ctx.globalAlpha = blinkSoon ? 0.85 : 0.45;
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * 0.5 * pulse, 0, Math.PI * 2); ctx.fill();
+    // 3 orbiting motes
+    ctx.shadowBlur = 0;
+    for (let k = 0; k < 3; k++) {
+      const ka = t * 2.2 + k * (Math.PI * 2 / 3) + e.seed;
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = flash ? '#ffffff' : '#88aaff';
+      if (PERF.shadowGlow) { ctx.shadowColor = '#4466ff'; ctx.shadowBlur = 8; }
+      ctx.beginPath();
+      ctx.arc(Math.cos(ka) * e.radius * 0.82, Math.sin(ka) * e.radius * 0.82, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    ctx.restore();
+    return;
+  }
+
+  if (e.type === 'tank') {
+    const armored = e.armor && e.hp > e.maxHp * 0.5;
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    // Hexagonal body
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    for (let k = 0; k < 6; k++) {
+      const a = k / 6 * Math.PI * 2 - Math.PI / 6;
+      const kr = e.radius * (armored ? 1 + Math.sin(t * 1.5 + k) * 0.02 : 0.9);
+      k === 0 ? ctx.moveTo(Math.cos(a) * kr, Math.sin(a) * kr)
+              : ctx.lineTo(Math.cos(a) * kr, Math.sin(a) * kr);
+    }
+    ctx.closePath(); ctx.fill();
+    // Armor plating lines (only when armored)
+    if (armored) {
+      ctx.strokeStyle = flash ? '#ffffff' : '#6688aa'; ctx.lineWidth = 1.5; ctx.shadowBlur = 0;
+      for (let k = 0; k < 6; k++) {
+        const a = k / 6 * Math.PI * 2 - Math.PI / 6;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * e.radius, Math.sin(a) * e.radius);
+        ctx.lineTo(Math.cos(a) * e.radius * 0.55, Math.sin(a) * e.radius * 0.55);
+        ctx.stroke();
+      }
+    }
+    // Central eye — blue while armored, red when cracked
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = flash ? '#fff' : (armored ? '#aaccff' : '#ff4422');
+    if (PERF.shadowGlow) { ctx.shadowColor = armored ? '#4466ff' : '#ff4422'; ctx.shadowBlur = 10; }
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * 0.23, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0; ctx.restore();
+    return;
+  }
+
+  if (e.type === 'bomber') {
+    const danger = game.player ? Math.max(0, 1 - dist(e.x, e.y, game.player.x, game.player.y) / 200) : 0;
+    const spd = 3 + danger * 6;
+    const pulse = 1 + Math.sin(t * spd + e.seed) * (0.07 + danger * 0.12);
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    // Outer danger ring
+    ctx.strokeStyle = flash ? '#ffffff' : `rgba(255,${Math.floor(120 + danger * 100)},0,${0.5 + danger * 0.45})`;
+    ctx.lineWidth = 2 + danger * 3;
+    if (PERF.shadowGlow) { ctx.shadowColor = e.glow; ctx.shadowBlur = 18 + danger * 28; }
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * pulse * 1.25, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+    // Core body
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * pulse, 0, Math.PI * 2); ctx.fill();
+    // Inner hot core
+    ctx.fillStyle = flash ? '#ffffff' : `rgb(255,${Math.floor(180 + danger * 75)},${Math.floor(danger * 60)})`;
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * 0.48 * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  if (e.type === 'soul') {
+    const pulse = 1 + Math.sin(t * 5.5 + e.seed) * 0.19;
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    if (PERF.shadowGlow) { ctx.shadowColor = e.glow; ctx.shadowBlur = 20; }
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Bright white core
+    ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.92;
+    ctx.beginPath(); ctx.arc(0, 0, e.radius * 0.46 * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Speed trail line
+    ctx.strokeStyle = e.glow; ctx.lineWidth = 1.4; ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-Math.cos(faceA) * e.radius * 2, -Math.sin(faceA) * e.radius * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
     return;
   }
 
