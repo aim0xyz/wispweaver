@@ -1340,11 +1340,11 @@
 
   <!-- Cinematic intro (studio splash + title reveal) -->
   <div id="intro-screen" onclick="endIntro()">
-    <div class="intro-skip">Tippen zum Überspringen</div>
+    <div class="intro-skip">Tap to Skip</div>
     <div class="intro-studio">
       <div class="studio-mark"><span></span><span></span><span></span></div>
       <div class="studio-name">AIM0&nbsp;GAMES</div>
-      <div class="studio-sub">präsentiert</div>
+      <div class="studio-sub">presents</div>
     </div>
     <div class="intro-title">
       <div class="intro-motes"></div>
@@ -1358,10 +1358,10 @@
   <!-- Speed + Mute controls -->
   <button id="autoBtn" onclick="toggleAutoMenu()" title="Autopilot mode (P)" aria-label="Autopilot mode">AUTO</button>
   <div id="autoMenu">
-    <div class="auto-opt" data-mode="off"   onclick="setAutoMode('off')"><span class="dot"></span>Aus</div>
-    <div class="auto-opt" data-mode="steer" onclick="setAutoMode('steer')"><span class="dot"></span>Nur Auto-Steuern</div>
-    <div class="auto-opt" data-mode="pick"  onclick="setAutoMode('pick')"><span class="dot"></span>Nur Auto-Pick</div>
-    <div class="auto-opt" data-mode="both"  onclick="setAutoMode('both')"><span class="dot"></span>Beides</div>
+    <div class="auto-opt" data-mode="off"   onclick="setAutoMode('off')"><span class="dot"></span>Off</div>
+    <div class="auto-opt" data-mode="steer" onclick="setAutoMode('steer')"><span class="dot"></span>Steer Only</div>
+    <div class="auto-opt" data-mode="pick"  onclick="setAutoMode('pick')"><span class="dot"></span>Pick Only</div>
+    <div class="auto-opt" data-mode="both"  onclick="setAutoMode('both')"><span class="dot"></span>Both</div>
   </div>
   <button id="speedBtn" onclick="cycleSpeed()" title="Game speed (0.5x / 1x / 2x)" aria-label="Game speed">1×</button>
   <button id="muteBtn" onclick="toggleMute()" title="Sound on/off" aria-label="Toggle sound"></button>
@@ -1376,8 +1376,8 @@
   <div id="pause-screen">
     <div class="pause-box">
       <div class="pause-title">Pause</div>
-      <button class="btn-resume" onclick="togglePause()">▶ Weiter</button>
-      <button class="btn-quit-game" onclick="pauseQuit()">Spiel beenden</button>
+      <button class="btn-resume" onclick="togglePause()">▶ Resume</button>
+      <button class="btn-quit-game" onclick="pauseQuit()">Quit Game</button>
     </div>
   </div>
 
@@ -1420,11 +1420,11 @@
   <!-- World Transition -->
   <div id="world-screen">
     <div class="world-inner">
-      <div class="world-chapter-tag">Kapitel <span id="worldChapter">I</span></div>
-      <div class="world-title" id="worldTitle" style="color:#cc99ff">Das Dunkelwäldnis</div>
+      <div class="world-chapter-tag">Chapter <span id="worldChapter">I</span></div>
+      <div class="world-title" id="worldTitle" style="color:#cc99ff">The Gloomwood</div>
       <div class="world-rule" id="worldRule" style="color:#cc99ff"></div>
-      <div class="world-flavor" id="worldFlavor">Wo das Licht zuerst starb</div>
-      <div class="world-range" id="worldRange">Wellen 1–10</div>
+      <div class="world-flavor" id="worldFlavor">Where the light first died</div>
+      <div class="world-range" id="worldRange">Waves 1–10</div>
     </div>
   </div>
 
@@ -1451,7 +1451,7 @@
     <div class="menu-panel">
       <div class="mode-select" id="modeSelect">
         <button class="mode-btn active" data-mode="arena"   onclick="setMode('arena')"><svg viewBox="0 0 16 16" width="13" height="13" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:4px"><line x1="13" y1="3" x2="3" y2="13"/><line x1="7" y1="6" x2="10" y2="9"/><path d="M3 13l-1 1 1 1 1-1M12 2l2 2-1 1-2-2z" fill="currentColor" stroke="none"/></svg>Arena</button>
-        <button class="mode-btn"        data-mode="explore" onclick="setMode('explore')"><svg viewBox="0 0 16 16" width="13" height="13" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:4px"><circle cx="8" cy="8" r="5.5"/><path d="M8 3.5v1M8 11.5v1M3.5 8h1M11.5 8h1" stroke-width="1"/><path d="M8 5.5L9.2 8 8 10.5 6.8 8z" fill="currentColor" stroke="none" opacity="0.85"/></svg>Erkundung</button>
+        <button class="mode-btn"        data-mode="explore" onclick="setMode('explore')"><svg viewBox="0 0 16 16" width="13" height="13" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:4px"><circle cx="8" cy="8" r="5.5"/><path d="M8 3.5v1M8 11.5v1M3.5 8h1M11.5 8h1" stroke-width="1"/><path d="M8 5.5L9.2 8 8 10.5 6.8 8z" fill="currentColor" stroke="none" opacity="0.85"/></svg>Explore</button>
       </div>
       <button class="btn btn-primary" onclick="startSelect()">
         <svg viewBox="0 0 20 20" width="18" height="18" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
@@ -1464,7 +1464,7 @@
         <svg viewBox="0 0 20 20" width="16" height="16" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
           <path d="M10 2l2.4 5 5.6.5-4.2 3.7 1.3 5.3L10 18.8 4.9 16.5l1.3-5.3L2 7.5 7.6 7z"/>
         </svg>
-        Lumina-Schmiede
+        Lumina Forge
       </button>
       <button class="btn btn-secondary btn-small" onclick="showLeaderboard()">
         <svg viewBox="0 0 20 20" width="16" height="16" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
@@ -1480,28 +1480,28 @@
 
   <!-- Lumina Shop / meta-progression -->
   <div class="screen-overlay hidden" id="shop-screen">
-    <h2>Lumina-Schmiede</h2>
-    <div class="hint">Dauerhafte Verbesserungen — bleiben über alle Runden</div>
+    <h2>Lumina Forge</h2>
+    <div class="hint">Permanent upgrades — persist across all runs</div>
     <div class="shop-bank">◈ <span id="shopBank">0</span> Lumina</div>
     <div class="shop-grid" id="shopGrid"></div>
-    <button class="btn btn-secondary btn-small" onclick="closeShop()">Zurück</button>
+    <button class="btn btn-secondary btn-small" onclick="closeShop()">Back</button>
   </div>
 
   <!-- Character Select -->
   <div class="screen-overlay hidden" id="select-screen">
     <h2>Choose your Wisp</h2>
-    <div class="hint">Wische oder nutze ← → zum Wechseln</div>
+    <div class="hint">Swipe or use ← → to switch</div>
     <div class="wisp-carousel" id="wispCarousel">
-      <button class="carousel-arrow" onclick="cycleChar(-1)" aria-label="Vorheriger Wisp">‹</button>
+      <button class="carousel-arrow" onclick="cycleChar(-1)" aria-label="Previous Wisp">‹</button>
       <div class="wisp-stage" id="wispStage"></div>
-      <button class="carousel-arrow" onclick="cycleChar(1)" aria-label="Nächster Wisp">›</button>
+      <button class="carousel-arrow" onclick="cycleChar(1)" aria-label="Next Wisp">›</button>
     </div>
     <div class="wisp-dots" id="wispDots"></div>
     <div class="diff-select" id="diffSelect">
-      <button class="diff-btn" data-diff="easy"   onclick="setDifficulty('easy')">Leicht</button>
+      <button class="diff-btn" data-diff="easy"   onclick="setDifficulty('easy')">Easy</button>
       <button class="diff-btn" data-diff="normal" onclick="setDifficulty('normal')">Normal</button>
-      <button class="diff-btn" data-diff="hard"   onclick="setDifficulty('hard')">Schwer</button>
-      <button class="diff-btn" data-diff="expert" onclick="setDifficulty('expert')">Experte</button>
+      <button class="diff-btn" data-diff="hard"   onclick="setDifficulty('hard')">Hard</button>
+      <button class="diff-btn" data-diff="expert" onclick="setDifficulty('expert')">Expert</button>
     </div>
     <div class="diff-desc" id="diffDesc"></div>
     <button class="btn btn-primary" id="selectConfirm" disabled onclick="confirmSelect()">
@@ -1512,7 +1512,7 @@
       </svg>
       WEAVE
     </button>
-    <button class="btn btn-secondary btn-small" onclick="closeSelect()">Zurück</button>
+    <button class="btn btn-secondary btn-small" onclick="closeSelect()">Back</button>
   </div>
 
   <!-- Upgrade -->
@@ -2200,43 +2200,43 @@ function getIconSVG(name, color) {
 
 // ─── CHARACTERS ───
 const CHARACTERS = [
-  { id:'flare',  name:'Flare',  icon:'flame',  desc:'Burning arcs that scorch the dark',   ability:'Burn aura + fire spread', color:'#ff6600', glow:'#ff4400',
-    bonus: { damage:4, hp:20 }, passives:'burnAura' },
   { id:'wisp',   name:'Wisp',   icon:'sparkle',desc:'Swift light that never touches shadow', ability:'Fast attacks + phase dodge',  color:'#66ddff', glow:'#3399ff',
     bonus: { speed:0.8, attackRate:-4 }, passives:'phaseDodge' },
-  { id:'prism',  name:'Prism',  icon:'prism',  desc:'Light splits and shatters darkness',   ability:'Innate split + shatter on kill', color:'#cc44ff', glow:'#8833ff',
-    bonus: { projectiles:1 }, passives:'shatter' },
-  { id:'echo',   name:'Echo',   icon:'echo',   desc:'Resonant wisps that hunt the gloom',   ability:'Homing projectiles + echo on kill', color:'#44ffaa', glow:'#22dd88',
-    bonus: { }, passives:'homing' },
+  { id:'flare',  name:'Flare',  icon:'flame',  desc:'Burning arcs that scorch the dark',     ability:'Burn aura + fire spread',       color:'#ff6600', glow:'#ff4400',
+    bonus: { damage:4, hp:20 }, passives:'burnAura', unlock: 800 },
+  { id:'prism',  name:'Prism',  icon:'prism',  desc:'Light splits and shatters darkness',     ability:'Innate split + shatter on kill', color:'#cc44ff', glow:'#8833ff',
+    bonus: { projectiles:1 }, passives:'shatter', unlock: 1800 },
+  { id:'echo',   name:'Echo',   icon:'echo',   desc:'Resonant wisps that hunt the gloom',     ability:'Homing projectiles + echo on kill', color:'#44ffaa', glow:'#22dd88',
+    bonus: { }, passives:'homing', unlock: 3200 },
   { id:'verdant', name:'Verdant', icon:'verdant',
-    desc:'Saugt Leben aus jedem Treffer — sät Samenbomben, die die Dunkelheit zerfetzen',
-    ability:'Lebensraub · Samenbombe (alle 12 Kills) · Naturhauch-Aura',
+    desc:'Drains life from every hit — seeds bomb blasts that tear through darkness',
+    ability:'Lifedrain · Seed Bomb (every 12 kills) · Nature Breeze Aura',
     bonus: { hp: 10 }, color:'#44ff88', glow:'#22cc66', unlock: 4500 },
   { id:'vortex',  name:'Vortex',  icon:'vortex',
-    desc:'Raumkrümmung als Waffe — sammelt orbitale Trümmer und entfesselt Singularitäten',
-    ability:'Gravitationspuls · Orbitale Trümmer · SINGULARITÄT alle 3 Pulse',
+    desc:'Space itself is your weapon — gather orbital debris and unleash singularities',
+    ability:'Gravity Pulse · Orbital Debris · SINGULARITY every 3 pulses',
     bonus: { damage: 4 }, color:'#6644ff', glow:'#4422dd', unlock: 10000 },
   { id:'phantom', name:'Phantom', icon:'phantom',
-    desc:'Meister der Schatten — beschwört Geisterkopien und wandelt Schmerz in Macht',
-    ability:'Schattenecho · Phasenrüstung · Schattensalve alle 5 Schüsse',
+    desc:'Master of shadows — summons ghost echoes and turns pain into power',
+    ability:'Shadow Echo · Phase Armor · Shadow Volley every 5 shots',
     bonus: { speed: 0.5 }, color:'#c8beff', glow:'#8877ff', unlock: 20000 },
   { id:'nova',    name:'Nova',    icon:'nova',
-    desc:'Lebendiger Stern — lädt Sternenergie auf, verbrennt Feinde in der Nähe und explodiert am Rand des Todes',
-    ability:'Sternkern-Aufladung · Koronenhalo · Supernova (1× pro Run)',
+    desc:'A living star — charges stellar energy, burns nearby foes, and detonates at the brink of death',
+    ability:'Stellar Core Charge · Corona Halo · Supernova (1× per run)',
     bonus: { damage: 6 }, color:'#fff4aa', glow:'#ffcc00', unlock: 35000 },
   { id:'puls', name:'Puls', icon:'puls',
-    desc:'Kein Projektil — nur Schockwellen, die alles auf ihrem Weg vernichten',
-    ability:'360°-Schadenswelle · Doppelring-Angriff · Wellenkaskade',
+    desc:'No projectiles — only shockwaves that obliterate everything in their path',
+    ability:'360° Damage Wave · Double Ring Strike · Wave Cascade',
     bonus: { hp: 15 }, color:'#44ccff', glow:'#1188cc', unlock: 45000,
     excludeUpgrades: ['extra_shot', 'chain'] },
   { id:'volt', name:'Volt', icon:'volt',
-    desc:'Entfesselt Kettenblitze, die von Feind zu Feind springen und alles versengen',
-    ability:'Kettenblitz (+1 Sprung/Kettenangriff-Stufe) · Blitzreichweite · Dauerhafter Schaden',
+    desc:'Unleashes chain lightning that leaps between enemies and scorches all in its path',
+    ability:'Chain Lightning (+1 hop/Chain level) · Lightning Reach · Persistent Damage',
     bonus: { damage: 5 }, color:'#ffee55', glow:'#ddaa00', unlock: 55000,
     excludeUpgrades: ['extra_shot'] },
   { id:'apex', name:'Apex', icon:'apex',
-    desc:'Kein Feind entkommt — jedes Projektil ist eine unerbittliche Suchrakete die ihr Ziel findet',
-    ability:'Homing-Raketen · 3 Suchraketen ab Start · Langer Raketenschweif',
+    desc:'No enemy escapes — every projectile is a relentless seeking missile that finds its mark',
+    ability:'Homing Missiles · 3 seeker missiles from the start · Long missile trail',
     bonus: { projectiles: 2 }, color:'#ff1155', glow:'#cc0033', unlock: 60000 },
 ];
 
@@ -2259,19 +2259,19 @@ const ALL_UPGRADES = [
 // ─── DIFFICULTY ───
 // Multipliers applied to enemy stats, spawn counts and the player's HP.
 const DIFFICULTIES = {
-  easy:   { name:'Leicht',  enemyHp:0.7, enemyDmg:0.5,  enemySpeed:0.9,  count:0.8,  playerHp:1.4, desc:'Mehr HP, schwächere Gegner — entspanntes Weben.' },
-  normal: { name:'Normal',  enemyHp:1,   enemyDmg:1,    enemySpeed:1,    count:1,    playerHp:1,   desc:'Die ausgewogene Herausforderung.' },
-  hard:   { name:'Schwer',  enemyHp:1.35,enemyDmg:1.45, enemySpeed:1.12, count:1.3,  playerHp:0.85,desc:'Zähere, gefährlichere Gegner und mehr davon.' },
-  expert: { name:'Experte', enemyHp:1.7, enemyDmg:2,    enemySpeed:1.25, count:1.6,  playerHp:0.7, desc:'Nur für Meister-Weber. Ein Treffer tut richtig weh.' },
+  easy:   { name:'Easy',   enemyHp:0.7, enemyDmg:0.5,  enemySpeed:0.9,  count:0.8,  playerHp:1.4, desc:'More HP, weaker enemies — a relaxed weave.' },
+  normal: { name:'Normal', enemyHp:1,   enemyDmg:1,    enemySpeed:1,    count:1,    playerHp:1,   desc:'The balanced challenge.' },
+  hard:   { name:'Hard',   enemyHp:1.35,enemyDmg:1.45, enemySpeed:1.12, count:1.3,  playerHp:0.85,desc:'Tougher, more dangerous enemies and more of them.' },
+  expert: { name:'Expert', enemyHp:1.7, enemyDmg:2,    enemySpeed:1.25, count:1.6,  playerHp:0.7, desc:'For master weavers only. One hit really hurts.' },
 };
 function diffMods() { return DIFFICULTIES[game.difficulty] || DIFFICULTIES.normal; }
 
 // ─── WORLDS ─── Visual biomes that change every 10 waves
 const WORLDS = [
   {
-    id: 'gloomwood',   name: 'Das Dunkelwäldnis',
-    flavor: 'Wo das Licht zuerst starb',
-    range: 'Wellen 1–10',   chapter: 'I',  nameColor: '#cc99ff',
+    id: 'gloomwood',   name: 'The Gloomwood',
+    flavor: 'Where the light first died',
+    range: 'Waves 1–10',   chapter: 'I',  nameColor: '#cc99ff',
     bgDark: '#0c0514', bgMid: '#100820',
     nebulaTints: ['#3a2a66','#27406b','#5a2a55'],
     starColors:  ['#ffffff','#ffe8cc','#cce0ff','#ffeedd'],
@@ -2280,9 +2280,9 @@ const WORLDS = [
     ambientColor: null,
   },
   {
-    id: 'ashfields',   name: 'Die Aschfelder',
-    flavor: 'Jede Flamme war einst ein Wisp',
-    range: 'Wellen 11–20',  chapter: 'II', nameColor: '#ff9944',
+    id: 'ashfields',   name: 'The Ashfields',
+    flavor: 'Every flame was once a wisp',
+    range: 'Waves 11–20',  chapter: 'II', nameColor: '#ff9944',
     bgDark: '#140803', bgMid: '#1e0c05',
     nebulaTints: ['#662211','#441108','#552200'],
     starColors:  ['#ffeecc','#ffcc88','#ff9944','#ffe0aa'],
@@ -2291,9 +2291,9 @@ const WORLDS = [
     ambientColor: '#ff6622',
   },
   {
-    id: 'voidrift',    name: 'Die Leerespalte',
-    flavor: 'Kein Echo kehrt aus der Tiefe zurück',
-    range: 'Wellen 21–30',  chapter: 'III',nameColor: '#44ddff',
+    id: 'voidrift',    name: 'The Void Rift',
+    flavor: 'No echo returns from the depths',
+    range: 'Waves 21–30',  chapter: 'III',nameColor: '#44ddff',
     bgDark: '#010a10', bgMid: '#030e18',
     nebulaTints: ['#0a3344','#0a2233','#083344'],
     starColors:  ['#ffffff','#aaeeff','#66ddff','#88ffee'],
@@ -2302,9 +2302,9 @@ const WORLDS = [
     ambientColor: '#00aacc',
   },
   {
-    id: 'crystalmire', name: 'Der Kristallsumpf',
-    flavor: 'Schönheit, die tötet',
-    range: 'Wellen 31–40',  chapter: 'IV', nameColor: '#ee88ff',
+    id: 'crystalmire', name: 'The Crystal Mire',
+    flavor: 'Beauty that kills',
+    range: 'Waves 31–40',  chapter: 'IV', nameColor: '#ee88ff',
     bgDark: '#0e0318', bgMid: '#160522',
     nebulaTints: ['#4a0a55','#350a55','#550a3a'],
     starColors:  ['#ffffff','#ffaaee','#ee88ff','#ffddee'],
@@ -2313,9 +2313,9 @@ const WORLDS = [
     ambientColor: '#cc44ff',
   },
   {
-    id: 'eternal',     name: 'Die Ewige Finsternis',
-    flavor: 'Hier endet das Licht. Hier beginnt die Legende.',
-    range: 'Wellen 41+',    chapter: 'V',  nameColor: '#ffdd44',
+    id: 'eternal',     name: 'The Eternal Dark',
+    flavor: 'Here the light ends. Here legend begins.',
+    range: 'Waves 41+',    chapter: 'V',  nameColor: '#ffdd44',
     bgDark: '#000000', bgMid: '#080604',
     nebulaTints: ['#332200','#1a1100','#221a00'],
     starColors:  ['#ffffff','#ffe066','#ffcc00','#ffdd88'],
@@ -2345,11 +2345,11 @@ const POWERUP_KEYS = Object.keys(POWERUPS);
 // ─── LUMINA SHOP (meta-progression) ─── permanent upgrades bought with banked
 // lumina. Levels persist in localStorage; effects apply at the start of a run.
 const SHOP_ITEMS = [
-  { id: 'hp',      name: 'Lebenskern',    desc: '+25 Max-HP pro Stufe',          maxLvl: 10, base: 100, icon: 'shop_hp',     color: '#ff6680' },
-  { id: 'dmg',     name: 'Glutkern',      desc: '+8% Schaden pro Stufe',         maxLvl: 10, base: 130, icon: 'shop_dmg',    color: '#ff9a4d' },
-  { id: 'speed',   name: 'Windschritt',   desc: '+5% Bewegungstempo pro Stufe',  maxLvl: 10, base: 115, icon: 'shop_speed',  color: '#88ffcc' },
-  { id: 'lumina',  name: 'Lichtsog',      desc: '+15% Lumina-Ertrag pro Stufe',  maxLvl: 10, base: 90,  icon: 'shop_lumina', color: '#ffcc66' },
-  { id: 'revive',  name: 'Zweites Licht', desc: '+1 Wiederbelebung pro Stufe',   maxLvl:  5, base: 560, icon: 'shop_revive', color: '#ffb066' },
+  { id: 'hp',      name: 'Vital Core',    desc: '+25 Max HP per level',          maxLvl: 10, base: 100, icon: 'shop_hp',     color: '#ff6680' },
+  { id: 'dmg',     name: 'Ember Core',    desc: '+8% damage per level',          maxLvl: 10, base: 130, icon: 'shop_dmg',    color: '#ff9a4d' },
+  { id: 'speed',   name: 'Windstep',      desc: '+5% move speed per level',      maxLvl: 10, base: 115, icon: 'shop_speed',  color: '#88ffcc' },
+  { id: 'lumina',  name: 'Lumina Pull',   desc: '+15% Lumina yield per level',   maxLvl: 10, base: 90,  icon: 'shop_lumina', color: '#ffcc66' },
+  { id: 'revive',  name: 'Second Light',  desc: '+1 revive per level',           maxLvl:  5, base: 560, icon: 'shop_revive', color: '#ffb066' },
 ];
 function shopCost(item, lvl) { return Math.round(item.base * Math.pow(1.72, lvl)); }
 function getBank() { return parseInt(Store.get('ww_bank') || '0', 10) || 0; }
@@ -2692,11 +2692,11 @@ class Enemy {
         this.variant = Math.max(0, Math.floor(wave / 10) - 1);
         const bv = this.variant % 5;
         const BOSS_VARIANTS = [
-          { name: 'DIE GLOOMSCHWINGE',  color: '#cc2244', glow: '#880022', spikes: 11 },
-          { name: 'DER ASCHENTITAN',    color: '#ff6622', glow: '#cc3300', spikes: 7  },
-          { name: 'DER LEEREBOTE',      color: '#00aadd', glow: '#006688', spikes: 6  },
-          { name: 'DER KRISTALLTYRANN', color: '#cc44ff', glow: '#880088', spikes: 14 },
-          { name: 'DIE EWIGE FINSTERNIS',color:'#ffdd00', glow: '#aa8800', spikes: 9  },
+          { name: 'THE GLOOM WING',      color: '#cc2244', glow: '#880022', spikes: 11 },
+          { name: 'THE ASH TITAN',       color: '#ff6622', glow: '#cc3300', spikes: 7  },
+          { name: 'THE VOID HERALD',     color: '#00aadd', glow: '#006688', spikes: 6  },
+          { name: 'THE CRYSTAL TYRANT',  color: '#cc44ff', glow: '#880088', spikes: 14 },
+          { name: 'THE ETERNAL DARK',    color: '#ffdd00', glow: '#aa8800', spikes: 9  },
         ];
         const bdata = BOSS_VARIANTS[bv];
         this.color = bdata.color;
@@ -2819,19 +2819,19 @@ function startSelect() {
 
 // Human-readable trait chips for a wisp (bonuses + passive).
 const PASSIVE_LABELS = {
-  burnAura: 'Brand-Aura', phaseDodge: 'Phasen-Ausweichen',
-  shatter: 'Splittern', homing: 'Zielsuchend',
+  burnAura: 'Burn Aura', phaseDodge: 'Phase Dodge',
+  shatter: 'Shatter', homing: 'Homing',
 };
 function wispTraits(ch) {
   const t = [];
   const b = ch.bonus || {};
-  if (b.damage)      t.push(`+${b.damage} Schaden`);
+  if (b.damage)      t.push(`+${b.damage} Damage`);
   if (b.hp)          t.push(`+${b.hp} HP`);
-  if (b.speed)       t.push(`+${b.speed} Tempo`);
-  if (b.attackRate)  t.push(b.attackRate < 0 ? 'Schnellfeuer' : `${b.attackRate} Rate`);
-  if (b.projectiles) t.push(`+${b.projectiles} Projektil`);
+  if (b.speed)       t.push(`+${b.speed} Speed`);
+  if (b.attackRate)  t.push(b.attackRate < 0 ? 'Rapid Fire' : `${b.attackRate} Rate`);
+  if (b.projectiles) t.push(`+${b.projectiles} Projectile`);
   if (ch.passives && PASSIVE_LABELS[ch.passives]) t.push(PASSIVE_LABELS[ch.passives]);
-  if (!t.length) t.push('Ausgewogen');
+  if (!t.length) t.push('Balanced');
   return t.map(x => `<span class="wisp-trait">${x}</span>`).join('');
 }
 
@@ -2847,7 +2847,7 @@ function renderCharSelect(dir) {
       <div class="wisp-name">${ch.name}</div>
       <div class="wisp-desc">${ch.desc}</div>
       <div class="wisp-traits">${wispTraits(ch)}</div>
-      ${locked ? `<div class="wisp-lock">🔒 Im Shop freischalten · ◈ ${ch.unlock.toLocaleString()}</div>` : ''}
+      ${locked ? `<div class="wisp-lock">🔒 Unlock in Shop · ◈ ${ch.unlock.toLocaleString()}</div>` : ''}
     </div>`;
 
   const dots = document.getElementById('wispDots');
@@ -2947,8 +2947,8 @@ function startGame() {
   if (Store.get('ww_seenHint') !== '1') {
     const onTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
     const tip = onTouch
-      ? 'Ziehe zum Bewegen · dein Wisp greift von allein an'
-      : 'WASD / Pfeile bewegen · dein Wisp greift von allein an';
+      ? 'Drag to move · your Wisp attacks automatically'
+      : 'WASD / Arrows to move · your Wisp attacks automatically';
     setTimeout(() => { if (game.state === 'playing') showStory(tip); }, 1100);
     Store.set('ww_seenHint', '1');
   }
@@ -2975,7 +2975,7 @@ function showWaveAnnounce(wave) {
   ];
   sub.textContent = subs[Math.min(wave - 1, subs.length - 1)];
   const isBossWave = game.wave % 10 === 0;
-  if (isBossWave) sub.textContent = 'Eine mächtige Dunkelheit erwacht...';
+  if (isBossWave) sub.textContent = 'A mighty darkness awakens...';
   sfx(isBossWave ? 'boss' : 'wave');
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), isBossWave ? 2500 : 1500);
@@ -3281,7 +3281,7 @@ function upgradeScreen() {
       <div class="icon-wrap">${svg}</div>
       <div class="name">${upg.name}</div>
       <div class="desc">${upg.desc}</div>
-      <div class="level">Stufe ${lvl} / ${upg.maxLvl}</div>
+      <div class="level">Level ${lvl} / ${upg.maxLvl}</div>
     `;
     card.onclick = () => {
       sfx('levelup');
@@ -3381,7 +3381,7 @@ function gameOver() {
     game.screenShake = Math.max(game.screenShake, 14);
     spawnShockwave(p.x, p.y, '#88ffcc', 200, 32, 7);
     spawnParticles(p.x, p.y, '#aaffdd', 30, 5, 30, 3);
-    toast('Zweites Licht — wiederbelebt!');
+    toast('Second Light — revived!');
     sfx('best');
     return;
   }
@@ -3570,7 +3570,7 @@ function renderShop() {
         <span class="si-icon">${getIconSVG(item.icon, item.color)}</span>
         <div class="si-titles">
           <div class="si-name">${item.name}</div>
-          <div class="si-lvl">${maxed ? 'Maximal' : 'Stufe ' + lvl + '/' + item.maxLvl}</div>
+          <div class="si-lvl">${maxed ? 'Maxed' : 'Level ' + lvl + '/' + item.maxLvl}</div>
         </div>
       </div>
       <div class="si-desc">${item.desc}</div>
@@ -3586,7 +3586,7 @@ function renderShop() {
   const unlocks = getCharUnlocks();
   const secHeader = document.createElement('div');
   secHeader.className = 'si-section-header';
-  secHeader.textContent = 'Charaktere freischalten';
+  secHeader.textContent = 'Unlock Characters';
   grid.appendChild(secHeader);
   for (const ch of CHARACTERS.filter(c => c.unlock)) {
     const owned = !!unlocks[ch.id];
@@ -3598,13 +3598,13 @@ function renderShop() {
         <span class="si-icon">${getIconSVG(ch.icon, ch.color)}</span>
         <div class="si-titles">
           <div class="si-name">${ch.name}</div>
-          <div class="si-lvl">${owned ? 'Freigeschaltet' : 'Wisp'}</div>
+          <div class="si-lvl">${owned ? 'Unlocked' : 'Wisp'}</div>
         </div>
       </div>
       <div class="si-desc">${ch.ability}</div>
       <div class="si-pips"><span class="si-pip ${owned ? 'on' : ''}"></span></div>
       <button class="si-buy" ${owned || ch.unlock > bank ? 'disabled' : ''}>
-        ${owned ? '✓ ERHALTEN' : '◈ ' + ch.unlock.toLocaleString()}
+        ${owned ? '✓ OWNED' : '◈ ' + ch.unlock.toLocaleString()}
       </button>`;
     if (!owned) card2.querySelector('.si-buy').onclick = () => buyCharUnlock(ch.id);
     grid.appendChild(card2);
@@ -3618,23 +3618,23 @@ function buyShopItem(id) {
   if (lvl >= item.maxLvl) return;
   const cost = shopCost(item, lvl);
   const bank = getBank();
-  if (cost > bank) { toast('Nicht genug Lumina'); return; }
+  if (cost > bank) { toast('Not enough Lumina'); return; }
   setBank(bank - cost);
   levels[id] = lvl + 1;
   Store.set('ww_shop', JSON.stringify(levels));
   sfx('levelup');
-  toast(item.name + ' Stufe ' + (lvl + 1));
+  toast(item.name + ' Level ' + (lvl + 1));
   renderShop();
 }
 function buyCharUnlock(id) {
   const ch = CHARACTERS.find(c => c.id === id);
   if (!ch || !ch.unlock) return;
   const bank = getBank();
-  if (ch.unlock > bank) { toast('Nicht genug Lumina'); return; }
+  if (ch.unlock > bank) { toast('Not enough Lumina'); return; }
   setBank(bank - ch.unlock);
   setCharUnlock(id);
   sfx('levelup');
-  toast(ch.name + ' freigeschaltet!');
+  toast(ch.name + ' unlocked!');
   renderShop();
 }
 
@@ -3903,7 +3903,7 @@ function update() {
         game.screenShake = Math.max(game.screenShake, 14);
         game.screenFlash = Math.max(game.screenFlash, 10);
         game._flashColor = '100,50,255';
-        showStory('SINGULARITÄT — Zeit kollabiert!');
+        showStory('SINGULARITY — time collapses!');
       } else {
         spawnShockwave(p.x, p.y, '#6644ff', pullRadius, 35, 8);
         spawnShockwave(p.x, p.y, '#9977ff', 200, 20, 5);
@@ -4035,7 +4035,7 @@ function update() {
       game._flashColor = '255,240,100';
       game.hitStop = Math.max(game.hitStop, 12);
       sfx('boss');
-      showStory('SUPERNOVA — Der Stern explodiert!');
+      showStory('SUPERNOVA — the star explodes!');
     }
   }
 
@@ -4099,11 +4099,11 @@ function update() {
         const nameEl = document.getElementById('bossName');
         if (nameEl && bossEnemy) nameEl.textContent = bossEnemy.bossName || 'THE GLOOM INCARNATE';
         const bossStories = [
-          'Etwas Mächtiges entfaltet sich aus der Dunkelheit...',
-          'Der Aschentitan erwacht — geschmiedet aus kosmischem Feuer.',
-          'Der Leerebote tritt durch die Schwelle zwischen Sein und Nichts.',
-          'Der Kristalltyrann erhebt sich — schöner und tödlicher als je zuvor.',
-          'Die Ewige Finsternis selbst nimmt Gestalt an. Das Ende beginnt.',
+          'Something mighty unfolds from the darkness...',
+          'The Ash Titan awakens — forged from cosmic fire.',
+          'The Void Herald steps through the threshold between being and nothing.',
+          'The Crystal Tyrant rises — more beautiful and more deadly than ever before.',
+          'The Eternal Dark itself takes form. The end begins.',
         ];
         const storyIdx = Math.min(Math.floor(game.wave / 10) - 1, bossStories.length - 1);
         setTimeout(() => showStory(bossStories[Math.max(0, storyIdx)]), 800);
@@ -6864,7 +6864,7 @@ const AUTO_UPGRADE_PRIORITY = [
   'max_hp', 'regen', 'move_speed', 'magnet', 'longer_trail', 'wider_trail'
 ];
 
-const AUTO_LABELS = { off:'Aus', steer:'Auto-Steuern', pick:'Auto-Pick', both:'Beides' };
+const AUTO_LABELS = { off:'Off', steer:'Auto-Steer', pick:'Auto-Pick', both:'Both' };
 function autoSteerOn() { return game.autoMode === 'steer' || game.autoMode === 'both'; }
 function autoPickOn()  { return game.autoMode === 'pick'  || game.autoMode === 'both'; }
 
@@ -6888,7 +6888,7 @@ function setAutoMode(mode) {
   const m = document.getElementById('autoMenu');
   if (m) m.classList.remove('open');
   Sound.resume(); sfx('hit');
-  toast(mode === 'off' ? 'Autopilot aus' : 'Autopilot: ' + AUTO_LABELS[mode]);
+  toast(mode === 'off' ? 'Autopilot off' : 'Autopilot: ' + AUTO_LABELS[mode]);
   // If auto-pick just turned on while a pick is waiting, resolve it now.
   if (autoPickOn() && game.state === 'upgrade') autoPickUpgrade();
 }
