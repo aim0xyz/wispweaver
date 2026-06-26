@@ -2148,6 +2148,35 @@ function svgShopRevive(color) {
   </svg>`;
 }
 
+function svgPuls(color) {
+  const c = color || '#44ccff';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <circle cx="24" cy="24" r="20" fill="${c}" opacity="0.05"/>
+    <circle cx="24" cy="24" r="18" fill="none" stroke="${c}" stroke-width="1.4" opacity="0.28"/>
+    <circle cx="24" cy="24" r="13" fill="none" stroke="${c}" stroke-width="1.8" opacity="0.52"/>
+    <circle cx="24" cy="24" r="8"  fill="none" stroke="${c}" stroke-width="2.2" opacity="0.78"/>
+    <circle cx="24" cy="24" r="4"  fill="${c}" opacity="0.9"/>
+    <circle cx="24" cy="24" r="2"  fill="#fff" opacity="0.75"/>
+    <line x1="24" y1="4"  x2="24" y2="1"  stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <line x1="24" y1="44" x2="24" y2="47" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <line x1="4"  y1="24" x2="1"  y2="24" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <line x1="44" y1="24" x2="47" y2="24" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  </svg>`;
+}
+function svgVolt(color) {
+  const c = color || '#ffee55';
+  return `<svg viewBox="0 0 48 48" width="48" height="48">
+    <circle cx="24" cy="24" r="20" fill="${c}" opacity="0.06"/>
+    <polygon points="28,4 13,27 23,27 19,44 35,21 25,21" fill="${c}" opacity="0.9"/>
+    <polygon points="28,4 13,27 23,27 19,44 35,21 25,21" fill="none" stroke="#fff" stroke-width="1" opacity="0.38" stroke-linejoin="round"/>
+    <circle cx="22" cy="19" r="2.5" fill="#fff" opacity="0.65"/>
+    <line x1="8"  y1="12" x2="5"  y2="9"  stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+    <line x1="40" y1="12" x2="43" y2="9"  stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+    <line x1="8"  y1="36" x2="5"  y2="39" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+    <line x1="40" y1="36" x2="43" y2="39" stroke="${c}" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  </svg>`;
+}
+
 // ─── ICON MAP ───
 const ICON_MAP = {
   flame: svgFlame, sparkle: svgSparkle, prism: svgPrism, echo: svgEcho, apex: svgApex,
@@ -2158,6 +2187,7 @@ const ICON_MAP = {
   starburst: svgStarburst, magnet: svgMagnet, chain: svgChain,
   verdant: svgVerdant, vortex: svgVortex,
   phantom: svgPhantom, nova: svgNova,
+  puls: svgPuls, volt: svgVolt,
   shop_hp: svgShopHp, shop_dmg: svgShopDmg, shop_speed: svgShopSpeed,
   shop_dash: svgShopDash, shop_lumina: svgShopLumina, shop_revive: svgShopRevive,
 };
@@ -2194,6 +2224,14 @@ const CHARACTERS = [
     desc:'Lebendiger Stern — lädt Sternenergie auf, verbrennt Feinde in der Nähe und explodiert am Rand des Todes',
     ability:'Sternkern-Aufladung · Koronenhalo · Supernova (1× pro Run)',
     bonus: { damage: 6 }, color:'#fff4aa', glow:'#ffcc00', unlock: 35000 },
+  { id:'puls', name:'Puls', icon:'puls',
+    desc:'Kein Projektil — nur Schockwellen, die alles auf ihrem Weg vernichten',
+    ability:'360°-Schadenswelle · Doppelring-Angriff · Wellenkaskade',
+    bonus: { hp: 15 }, color:'#44ccff', glow:'#1188cc', unlock: 45000 },
+  { id:'volt', name:'Volt', icon:'volt',
+    desc:'Entfesselt Kettenblitze, die von Feind zu Feind springen und alles versengen',
+    ability:'Kettenblitz (4 Feinde) · Blitzüberspannung · Dauerhafter Schaden',
+    bonus: { damage: 5 }, color:'#ffee55', glow:'#ddaa00', unlock: 55000 },
   { id:'apex', name:'Apex', icon:'apex',
     desc:'Kein Feind entkommt — jedes Projektil ist eine unerbittliche Suchrakete die ihr Ziel findet',
     ability:'Homing-Raketen · 3 Suchraketen ab Start · Langer Raketenschweif',
@@ -2487,6 +2525,8 @@ class Player {
     this.novaCharge = 0;        // Nova: stellar charge 0-300
     this.supernovaUsed = false; // Nova: one-time supernova flag
     this.coronaTimer = 0;       // Nova: corona damage tick
+    this.pulsRippleTimer = 0;   // Puls: ambient ripple pulse timer
+    this.voltArcTimer = 0;      // Volt: ambient spark timer
 
     // Apply character base bonuses
     if (ch.bonus) {
@@ -2857,6 +2897,8 @@ function startGame() {
   game.verdantSeeds = [];   // Verdant: pending seed-bomb explosions
   game.vortexOrbiters = []; // Vortex: orbiting debris enemies
   game.phantomEchoes = [];  // Phantom: ghost clones from dashing
+  game.damageRings = [];    // Puls: expanding damage rings
+  game.lightningArcs = [];  // Volt: chain lightning visuals
   game.spawnTimer = 0;
   game.enemiesSpawned = 0;
   game.waveActive = false;
@@ -3065,6 +3107,60 @@ function playerAttack() {
   const p = game.player;
   if (!p) return;
   const stats = p.getStats();
+
+  // ── Puls: 360° expanding damage rings ──
+  if (p.charId === 'puls') {
+    sfx('shoot');
+    const maxR = 180 + stats.range * 55;
+    game.damageRings.push({ x: p.x, y: p.y, r: 0, maxR, speed: 5.5, life: Math.ceil(maxR / 5.5), maxLife: Math.ceil(maxR / 5.5), damage: stats.damage * 1.7, color: p.color, glow: p.glow, hitEnemies: new Set() });
+    game.damageRings.push({ x: p.x, y: p.y, r: 0, maxR: maxR * 0.6, speed: 8, life: Math.ceil(maxR * 0.6 / 8), maxLife: Math.ceil(maxR * 0.6 / 8), damage: stats.damage * 0.85, color: p.color, glow: p.glow, hitEnemies: new Set() });
+    spawnShockwave(p.x, p.y, p.color, 52, 16, 5);
+    spawnParticles(p.x, p.y, p.color, 22, 4, 26, 3);
+    p.attackPulse = 10;
+    return;
+  }
+
+  // ── Volt: instant chain lightning ──
+  if (p.charId === 'volt') {
+    sfx('shoot');
+    let chainDmg = stats.damage * 2.2;
+    let lastX = p.x, lastY = p.y;
+    const chained = new Set();
+    const arcPoints = [{ x: p.x, y: p.y }];
+    const toKill = [];
+    for (let hop = 0; hop < 4; hop++) {
+      let bestE = null, bestD = Infinity;
+      for (const e of game.enemies) {
+        if (chained.has(e)) continue;
+        const d = dist(lastX, lastY, e.x, e.y);
+        if (d < 290 && d < bestD) { bestD = d; bestE = e; }
+      }
+      if (!bestE) break;
+      chained.add(bestE);
+      arcPoints.push({ x: bestE.x, y: bestE.y });
+      bestE.hp -= chainDmg;
+      game.damageTexts.push(new DamageText(bestE.x, bestE.y - 16, Math.round(chainDmg).toString(), p.color, 18));
+      spawnParticles(bestE.x, bestE.y, p.color, 8, 3, 14, 2.5);
+      if (bestE.hp <= 0) toKill.push(bestE);
+      lastX = bestE.x; lastY = bestE.y;
+      chainDmg *= 0.65;
+    }
+    for (const dead of toKill) { killEnemy(dead); }
+    game.enemies = game.enemies.filter(e => !toKill.includes(e));
+    if (arcPoints.length > 1) {
+      const segs = [];
+      for (let si = 0; si < arcPoints.length - 1; si++) {
+        const p1 = arcPoints[si], p2 = arcPoints[si + 1];
+        segs.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, mx: (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 40, my: (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 40 });
+      }
+      game.lightningArcs.push({ segments: segs, life: 14, maxLife: 14, color: p.color, glow: p.glow });
+    }
+    spawnParticles(p.x, p.y, p.color, 14, 4, 22, 3);
+    spawnShockwave(p.x, p.y, p.color, 44, 14, 4);
+    p.attackPulse = 8;
+    return;
+  }
+
   sfx('shoot');
 
   const targetRange = 350 * stats.range;
@@ -3937,6 +4033,34 @@ function update() {
     }
   }
 
+  // Puls: ambient slow ripple (visual only)
+  if (p.charId === 'puls') {
+    p.pulsRippleTimer = (p.pulsRippleTimer || 0) + 1;
+    if (p.pulsRippleTimer >= 60) {
+      p.pulsRippleTimer = 0;
+      spawnShockwave(p.x, p.y, p.color, 40, 10, 4);
+    }
+  }
+
+  // Volt: ambient spark arc to nearest enemy
+  if (p.charId === 'volt') {
+    p.voltArcTimer = (p.voltArcTimer || 0) + 1;
+    if (p.voltArcTimer >= 30) {
+      p.voltArcTimer = 0;
+      let nearest = null, nearD = Infinity;
+      for (const e of game.enemies) {
+        const d = dist(p.x, p.y, e.x, e.y);
+        if (d < 180 && d < nearD) { nearD = d; nearest = e; }
+      }
+      if (nearest) {
+        game.lightningArcs.push({
+          segments: [{ x1: p.x, y1: p.y, x2: nearest.x, y2: nearest.y, mx: (p.x + nearest.x) / 2 + (Math.random() - 0.5) * 28, my: (p.y + nearest.y) / 2 + (Math.random() - 0.5) * 28 }],
+          life: 6, maxLife: 6, color: p.color + '99', glow: p.glow
+        });
+      }
+    }
+  }
+
   // Enemy slow decay
   for (const e of game.enemies) {
     if (e.slow > 0) e.slow--;
@@ -4334,6 +4458,34 @@ function update() {
   for (let i = game.shockwaves.length - 1; i >= 0; i--) {
     game.shockwaves[i].life--;
     if (game.shockwaves[i].life <= 0) game.shockwaves.splice(i, 1);
+  }
+
+  // Update Puls damage rings — expand, deal damage, then expire
+  for (let i = game.damageRings.length - 1; i >= 0; i--) {
+    const dr = game.damageRings[i];
+    dr.r += dr.speed;
+    dr.life--;
+    if (dr.life <= 0) { game.damageRings.splice(i, 1); continue; }
+    const toKillDr = [];
+    for (const e of game.enemies) {
+      if (dr.hitEnemies.has(e)) continue;
+      const d = dist(dr.x, dr.y, e.x, e.y);
+      if (d < dr.r + e.radius && d > dr.r - e.radius - dr.speed * 2) {
+        dr.hitEnemies.add(e);
+        e.hp -= dr.damage;
+        spawnParticles(e.x, e.y, dr.color, 6, 3, 12, 2);
+        game.damageTexts.push(new DamageText(e.x, e.y - 14, Math.round(dr.damage).toString(), dr.color, 16));
+        if (e.hp <= 0) toKillDr.push(e);
+      }
+    }
+    for (const dead of toKillDr) { killEnemy(dead); }
+    if (toKillDr.length) game.enemies = game.enemies.filter(e => !toKillDr.includes(e));
+  }
+
+  // Update Volt lightning arcs — simple fade-out
+  for (let i = game.lightningArcs.length - 1; i >= 0; i--) {
+    game.lightningArcs[i].life--;
+    if (game.lightningArcs[i].life <= 0) game.lightningArcs.splice(i, 1);
   }
 
   // Update enemy projectiles (boss volleys) — can be dodged
@@ -5143,6 +5295,41 @@ function drawPlayerBody(p, r) {
     ctx.fillStyle = '#15082e'; ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = '#bba6ff'; ctx.stroke();
     ctx.fillStyle = p.color;
+  } else if (p.charId === 'puls') {
+    // Puls — concentric breathing rings with bright core
+    const breathe = 1 + Math.sin(t * 0.07) * 0.1;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    for (let ring = 3; ring >= 1; ring--) {
+      const rr = r * (0.38 + ring * 0.42) * breathe;
+      ctx.globalAlpha = 0.9 - ring * 0.22;
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2.8 - ring * 0.5;
+      ctx.beginPath(); ctx.arc(0, 0, rr, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.42, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  } else if (p.charId === 'volt') {
+    // Volt — spiky electric orb with rotating arc limbs
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(t * 0.07);
+    const spikes = 6;
+    ctx.strokeStyle = p.color; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+    for (let k = 0; k < spikes; k++) {
+      const a = (k / spikes) * Math.PI * 2;
+      const inner = r * 0.5, outer = r * 1.5 + Math.sin(t * 0.15 + k * 1.1) * r * 0.3;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
+      const mx = Math.cos(a + 0.35) * r * 0.9, my = Math.sin(a + 0.35) * r * 0.9;
+      ctx.quadraticCurveTo(mx, my, Math.cos(a) * outer, Math.sin(a) * outer);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.55, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
   } else {
     // echo — ringed orb
     ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
@@ -5723,6 +5910,44 @@ function render() {
     ctx.restore();
   }
 
+  // Puls: pulsing outer rings around the player
+  if (p && p.charId === 'puls') {
+    const px2 = game.mode === 'explore' ? p.x - game.camera.x : p.x;
+    const py2 = game.mode === 'explore' ? p.y - game.camera.y : p.y;
+    const breathe = 0.5 + 0.5 * Math.abs(Math.sin(game.gameTime * 0.05));
+    ctx.save();
+    ctx.strokeStyle = p.color;
+    ctx.shadowColor = p.glow; ctx.shadowBlur = PERF.shadowGlow ? 14 : 0;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.22 + breathe * 0.28;
+    ctx.beginPath(); ctx.arc(px2, py2, p.radius + 12 + breathe * 8, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.12 + breathe * 0.16;
+    ctx.beginPath(); ctx.arc(px2, py2, p.radius + 24 + breathe * 14, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Volt: crackling static electricity aura
+  if (p && p.charId === 'volt') {
+    const px3 = game.mode === 'explore' ? p.x - game.camera.x : p.x;
+    const py3 = game.mode === 'explore' ? p.y - game.camera.y : p.y;
+    const sparkCount = 5;
+    ctx.save();
+    ctx.strokeStyle = p.color; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+    ctx.shadowColor = p.glow; ctx.shadowBlur = PERF.shadowGlow ? 10 : 0;
+    for (let i = 0; i < sparkCount; i++) {
+      const sa = (game.gameTime * 0.08 + i * (Math.PI * 2 / sparkCount)) % (Math.PI * 2);
+      const sr = p.radius + 10 + Math.sin(game.gameTime * 0.22 + i * 1.7) * 6;
+      const ex = px3 + Math.cos(sa) * sr + (Math.random() - 0.5) * 4;
+      const ey = py3 + Math.sin(sa) * sr + (Math.random() - 0.5) * 4;
+      ctx.globalAlpha = 0.35 + Math.sin(game.gameTime * 0.3 + i * 2.1) * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(px3 + Math.cos(sa) * p.radius * 0.9, py3 + Math.sin(sa) * p.radius * 0.9);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   // ─── END CHARACTER SPECIAL VISUALS ───────────────────────────────────────
 
   // Lumina orbs — diamond sparkle with rotating glint
@@ -6015,6 +6240,60 @@ function render() {
       ctx.lineWidth = (sw.width * 0.5) * (1 - tf);
       ctx.shadowBlur = 8;
       ctx.beginPath(); ctx.arc(sw.x, sw.y, r * 0.6, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+
+  // Puls damage rings — glowing expanding shock-front
+  for (const dr of game.damageRings) {
+    const tf = 1 - dr.life / dr.maxLife;
+    const alpha = (1 - tf) * 0.88;
+    ctx.save();
+    if (PERF.addBlend) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = alpha * 0.14;
+      ctx.fillStyle = dr.color;
+      ctx.beginPath(); ctx.arc(dr.x, dr.y, dr.r, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = dr.color;
+    ctx.lineWidth = 5.5 * (1 - tf * 0.55);
+    ctx.shadowColor = dr.glow; ctx.shadowBlur = PERF.shadowGlow ? 26 : 8;
+    ctx.beginPath(); ctx.arc(dr.x, dr.y, dr.r, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = alpha * 0.45;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(dr.x, dr.y, dr.r + 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Volt lightning arcs — zigzag chain between targets
+  for (const arc of game.lightningArcs) {
+    const tf = arc.life / arc.maxLife;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.shadowColor = arc.glow || arc.color; ctx.shadowBlur = PERF.shadowGlow ? 18 : 0;
+    ctx.globalAlpha = tf * 0.95;
+    ctx.strokeStyle = arc.color;
+    ctx.lineWidth = 2.5 + tf * 1.5;
+    for (const seg of arc.segments) {
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.quadraticCurveTo(seg.mx, seg.my, seg.x2, seg.y2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = tf * 0.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    ctx.shadowBlur = 0;
+    for (const seg of arc.segments) {
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.quadraticCurveTo(seg.mx, seg.my, seg.x2, seg.y2);
+      ctx.stroke();
     }
     ctx.restore();
   }
